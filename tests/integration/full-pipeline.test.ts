@@ -172,6 +172,31 @@ describe('full migration pipeline', () => {
     expect(afterContent).toBe(originalContent);
   });
 
+  it('extracts and translates MCP servers from Claude settings', async () => {
+    const mcpFixture = path.resolve('tests/fixtures/claude-mcp');
+    const projectDir = path.join(tmpDir, 'mcp-project');
+    await fs.cp(mcpFixture, projectDir, { recursive: true });
+
+    // Scan should extract MCP servers
+    const bundle = await claudeAdapter.scanProject({ root: projectDir });
+    expect(bundle.mcpServers.length).toBe(2);
+    expect(bundle.mcpServers.map(s => s.name).sort()).toEqual(['filesystem', 'github']);
+
+    // Normalize and write
+    const resources = normalizeBundle(bundle);
+    const { writeOpenCodeFiles } = await import('../../src/adapters/opencode/writer.js');
+    const files = writeOpenCodeFiles(resources);
+    const ocFile = files.find(f => f.path === 'opencode.json');
+    expect(ocFile).toBeDefined();
+
+    const config = JSON.parse(ocFile!.content);
+    expect(config.model).toBe('claude-sonnet-4-20250514');
+    expect(config.mcpServers.filesystem.type).toBe('stdio');
+    expect(config.mcpServers.filesystem.command).toBe('npx');
+    expect(config.mcpServers.github.type).toBe('stdio');
+    expect(config.mcpServers.github.env.GITHUB_TOKEN).toBe('ghp_xxx');
+  });
+
   it('handles empty project gracefully', async () => {
     const emptyDir = path.join(tmpDir, 'empty');
     await fs.mkdir(emptyDir);

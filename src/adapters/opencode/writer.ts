@@ -6,82 +6,68 @@ type TargetFile = {
   action: 'create' | 'update' | 'skip';
 };
 
+/** Translate Claude Code MCP server config to OpenCode format. */
+function translateMcpServer(claudeConfig: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  // OpenCode requires explicit type field; Claude infers stdio
+  result.type = 'stdio';
+  if (claudeConfig.command) result.command = claudeConfig.command;
+  if (claudeConfig.args) result.args = claudeConfig.args;
+  if (claudeConfig.env) result.env = claudeConfig.env;
+  return result;
+}
+
+/** Build opencode.json from Claude Code settings. */
+function buildOpenCodeConfig(claudeSettings: Record<string, unknown>): Record<string, unknown> {
+  const config: Record<string, unknown> = {};
+  if (claudeSettings.model) config.model = claudeSettings.model;
+  if (claudeSettings.permissions) config.permissions = claudeSettings.permissions;
+  // MCP servers are handled separately via translateMcpServer
+  return config;
+}
+
 export function writeOpenCodeFiles(resources: CanonicalResource[]): TargetFile[] {
   const files: TargetFile[] = [];
+  const openCodeConfig: Record<string, unknown> = {};
+  const mcpServers: Record<string, unknown> = {};
+  let hasSettings = false;
 
+  // First pass: collect all config and MCP servers
   for (const r of resources) {
-    switch (r.type) {
-      case 'instructions':
-        // Instructions copy directly as AGENTS.md
-        files.push({
-          path: r.name,
-          content: r.content || '',
-          action: 'create'
-        });
-        break;
+    if (r.type === 'opaque' && r.name.includes('settings.json') && r.content) {
+      try {
+        Object.assign(openCodeConfig, buildOpenCodeConfig(JSON.parse(r.content)));
+        hasSettings = true;
+      } catch { /* invalid JSON, skip */ }
+    } else if (r.type === 'mcpServers' && r.content) {
+      // MCP from dedicated mcpServers resources
+      try {
+        const serverConfig = JSON.parse(r.content);
+        mcpServers[r.name] = translateMcpServer(serverConfig);
+      } catch { /* invalid JSON, skip */ }
+    }
+  }
 
-      case 'opaque':
-        // Claude settings -> opencode.json
-        if (r.name.includes('settings.json') && r.content) {
-          try {
-            const claudeSettings = JSON.parse(r.content);
-            const openCodeConfig: Record<string, unknown> = {};
+  // Add translated MCP servers to config
+  if (Object.keys(mcpServers).length > 0) {
+    openCodeConfig.mcpServers = mcpServers;
+  }
 
-            // Map model
-            if (claudeSettings.model) {
-              openCodeConfig.model = claudeSettings.model;
-            }
+  // Write opencode.json if we have anything to write
+  if (hasSettings || Object.keys(mcpServers).length > 0) {
+    files.push({
+      path: 'opencode.json',
+      content: JSON.stringify(openCodeConfig, null, 2),
+      action: 'create'
+    });
+  }
 
-            // Map permissions
-            if (claudeSettings.permissions) {
-              openCodeConfig.permissions = claudeSettings.permissions;
-            }
-
-            files.push({
-              path: 'opencode.json',
-              content: JSON.stringify(openCodeConfig, null, 2),
-              action: 'create'
-            });
-          } catch {
-            // Invalid JSON, skip
-          }
-        }
-        break;
-
-      case 'skills':
-        // Skills -> commands (simplified)
-        if (r.content) {
-          files.push({
-            path: `commands/${r.name}`,
-            content: r.content,
-            action: 'create'
-          });
-        }
-        break;
-
-      case 'mcpServers':
-        // MCP config copies directly
-        if (r.content) {
-          files.push({
-            path: 'opencode.json',
-            content: r.content,
-            action: 'create'
-          });
-        }
-        break;
-
-      case 'hooks':
-      case 'agents':
-      case 'permissions':
-      case 'commands':
-      default:
-        // Skip unsupported for now
-        files.push({
-          path: r.name,
-          content: '',
-          action: 'skip'
-        });
-        break;
+  // Second pass: write non-config resources
+  for (const r of resources) {
+    if (r.type === 'instructions') {
+      files.push({ path: r.name, content: r.content || '', action: 'create' });
+    } else if (r.type === 'skills' && r.content) {
+      files.push({ path: `commands/${r.name}`, content: r.content, action: 'create' });
     }
   }
 

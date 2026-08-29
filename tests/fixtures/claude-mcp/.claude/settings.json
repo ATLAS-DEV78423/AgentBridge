@@ -1,0 +1,23 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "permissions": {
+    "allow": ["read", "write", "execute"],
+    "deny": ["delete"]
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "env": {
+        "HOME": "/Users/test"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_xxx"
+      }
+    }
+  }
+}

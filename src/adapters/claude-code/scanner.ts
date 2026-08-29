@@ -53,7 +53,7 @@ export async function scanClaudeProject(ctx: ScanContext): Promise<AgentBundle> 
       if (entry.isFile() && entry.name.endsWith('.json')) {
         const filePath = path.join(claudeDir, entry.name);
         const content = await fs.readFile(filePath, 'utf-8');
-        
+
         const resource = await createResource(
           'opaque',
           `.claude/${entry.name}`,
@@ -63,6 +63,23 @@ export async function scanClaudeProject(ctx: ScanContext): Promise<AgentBundle> 
         );
         resource.provenance.sourceAgent = 'claude-code';
         bundle.opaque.push(resource);
+
+        // Extract MCP servers from settings.json
+        if (entry.name === 'settings.json') {
+          try {
+            const settings = JSON.parse(content);
+            if (settings.mcpServers && typeof settings.mcpServers === 'object') {
+              for (const [name, server] of Object.entries(settings.mcpServers) as [string, Record<string, unknown>][]) {
+                const mcpResource = await createResource(
+                  'mcpServer', name, filePath, ctx.root,
+                  JSON.stringify(server), { command: server.command, args: server.args }
+                );
+                mcpResource.provenance.sourceAgent = 'claude-code';
+                bundle.mcpServers.push(mcpResource);
+              }
+            }
+          } catch { /* parse error, skip */ }
+        }
       }
     }
   } catch {
