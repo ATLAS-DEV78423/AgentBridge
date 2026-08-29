@@ -15,7 +15,3 @@ export type Bundle = {
   manifest: BundleManifest;
   bundle: AgentBundle;
 };
-
-export type BundleExportOptions = {
-  redactSecrets?: boolean;
-};

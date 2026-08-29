@@ -24,7 +24,7 @@ export async function executeApply(source: string, target: string, projectPath: 
 
   let targetFiles;
   if (target === 'opencode') {
-    targetFiles = writeOpenCodeFiles(resources, projectPath);
+    targetFiles = writeOpenCodeFiles(resources);
   } else {
     console.error(`Target writer for ${target} not yet implemented.`);
     process.exit(1);

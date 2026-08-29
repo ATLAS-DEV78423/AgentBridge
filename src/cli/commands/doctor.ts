@@ -50,12 +50,11 @@ export async function executeDoctor(projectPath: string, target?: string, fmt: O
   }
 
   // Check 4: Node.js version
-  const nodeVersion = process.version;
-  const major = parseInt(nodeVersion.slice(1), 10);
+  const major = parseInt(process.version.slice(1));
   if (major >= 18) {
-    checks.push({ name: 'node-version', status: 'ok', message: `Node.js ${nodeVersion}` });
+    checks.push({ name: 'node-version', status: 'ok', message: `Node.js ${process.version}` });
   } else {
-    checks.push({ name: 'node-version', status: 'error', message: `Node.js ${nodeVersion} (requires >=18)` });
+    checks.push({ name: 'node-version', status: 'error', message: `Node.js ${process.version} (requires >=18)` });
   }
 
   // Output

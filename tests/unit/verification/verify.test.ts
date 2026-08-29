@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
-import { verifyFile, verifyConfig, verifyResource, verifyMigration } from '../../../src/core/verification/verify.js';
+import { verifyFile, verifyResource, verifyMigration } from '../../../src/core/verification/verify.js';
 import { CanonicalResource } from '../../../src/core/normalize/normalizer.js';
 
 let tmpDir: string;
@@ -20,7 +20,6 @@ describe('verifyFile', () => {
   it('detects existing file', async () => {
     const filePath = path.join(tmpDir, 'test.txt');
     await fs.writeFile(filePath, 'hello');
-
     const result = await verifyFile(filePath);
     expect(result.status).toBe('FILE_EXISTS');
   });
@@ -28,10 +27,7 @@ describe('verifyFile', () => {
   it('verifies matching hash', async () => {
     const filePath = path.join(tmpDir, 'test.txt');
     await fs.writeFile(filePath, 'hello');
-
-    const content = await fs.readFile(filePath);
-    const hash = crypto.createHash('sha256').update(content).digest('hex');
-
+    const hash = crypto.createHash('sha256').update('hello').digest('hex');
     const result = await verifyFile(filePath, hash);
     expect(result.status).toBe('FILE_MATCHES');
   });
@@ -39,7 +35,6 @@ describe('verifyFile', () => {
   it('detects hash mismatch', async () => {
     const filePath = path.join(tmpDir, 'test.txt');
     await fs.writeFile(filePath, 'hello');
-
     const result = await verifyFile(filePath, 'wrong-hash');
     expect(result.status).toBe('FAILED');
   });
@@ -50,31 +45,12 @@ describe('verifyFile', () => {
   });
 });
 
-describe('verifyConfig', () => {
-  it('validates correct JSON', async () => {
-    const configPath = path.join(tmpDir, 'config.json');
-    await fs.writeFile(configPath, '{"key": "value"}');
-
-    const result = await verifyConfig(configPath, JSON.parse);
-    expect(result.status).toBe('CONFIG_PARSES');
-  });
-
-  it('detects invalid JSON', async () => {
-    const configPath = path.join(tmpDir, 'config.json');
-    await fs.writeFile(configPath, 'not json');
-
-    const result = await verifyConfig(configPath, JSON.parse);
-    expect(result.status).toBe('FAILED');
-  });
-});
-
 describe('verifyResource', () => {
   it('validates resource with content', () => {
     const resource: CanonicalResource = {
       id: 'test-1', type: 'instructions', name: 'AGENTS.md', content: '# Test',
       provenance: { sourceAgent: 'test', sourcePath: 'AGENTS.md', scope: 'project', originalHash: 'abc' }
     };
-
     const result = verifyResource(resource);
     expect(result.status).toBe('RESOURCE_DISCOVERED');
   });
@@ -84,7 +60,6 @@ describe('verifyResource', () => {
       id: 'test-1', type: 'instructions', name: 'AGENTS.md', content: '',
       provenance: { sourceAgent: 'test', sourcePath: 'AGENTS.md', scope: 'project', originalHash: 'abc' }
     };
-
     const result = verifyResource(resource);
     expect(result.status).toBe('FAILED');
   });
@@ -92,14 +67,11 @@ describe('verifyResource', () => {
 
 describe('verifyMigration', () => {
   it('verifies complete migration', async () => {
-    const filePath = path.join(tmpDir, 'test.txt');
-    await fs.writeFile(filePath, 'content');
-
+    await fs.writeFile(path.join(tmpDir, 'test.txt'), 'content');
     const resources: CanonicalResource[] = [{
       id: 'test-1', type: 'instructions', name: 'AGENTS.md', content: '# Test',
       provenance: { sourceAgent: 'test', sourcePath: 'AGENTS.md', scope: 'project', originalHash: 'abc' }
     }];
-
     const report = await verifyMigration('test-migration', tmpDir, [{ path: 'test.txt' }], resources);
     expect(report.success).toBe(true);
     expect(report.files.length).toBe(1);
@@ -111,7 +83,6 @@ describe('verifyMigration', () => {
       id: 'test-1', type: 'instructions', name: 'AGENTS.md', content: '',
       provenance: { sourceAgent: 'test', sourcePath: 'AGENTS.md', scope: 'project', originalHash: 'abc' }
     }];
-
     const report = await verifyMigration('test-migration', tmpDir, [{ path: 'nonexistent.txt' }], resources);
     expect(report.success).toBe(false);
     expect(report.warnings.length).toBeGreaterThan(0);

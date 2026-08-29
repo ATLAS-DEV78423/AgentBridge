@@ -6,7 +6,7 @@ type TargetFile = {
   action: 'create' | 'update' | 'skip';
 };
 
-export function writeOpenCodeFiles(resources: CanonicalResource[], targetRoot: string): TargetFile[] {
+export function writeOpenCodeFiles(resources: CanonicalResource[]): TargetFile[] {
   const files: TargetFile[] = [];
 
   for (const r of resources) {

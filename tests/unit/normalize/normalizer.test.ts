@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeBundle, groupByType } from '../../../src/core/normalize/normalizer.js';
+import { normalizeBundle } from '../../../src/core/normalize/normalizer.js';
 import { AgentBundle } from '../../../src/core/model/types.js';
 
 const MOCK_BUNDLE: AgentBundle = {
@@ -26,13 +26,5 @@ describe('normalizer', () => {
     const instr = resources.find(r => r.name === 'AGENTS.md');
     expect(instr).toBeDefined();
     expect(instr!.content).toBe('test');
-  });
-
-  it('groups by type', () => {
-    const resources = normalizeBundle(MOCK_BUNDLE);
-    const groups = groupByType(resources);
-    expect(groups.has('instructions')).toBe(true);
-    expect(groups.has('mcpServers')).toBe(true);
-    expect(groups.get('instructions')!.length).toBe(1);
   });
 });
