@@ -1,5 +1,5 @@
 export const HELP_TEXT = `
-Usage: agent-migrate <command> [options]
+Usage: agentbridge <command> [options]
 
 Commands:
   scan [path]           Scan directory for agent configurations
