@@ -12,12 +12,9 @@ const adapters: Record<string, AgentAdapter> = {
   'kilo': kiloAdapter
 };
 
-export async function executeApply(source: string, target: string, projectPath: string): Promise<void> {
+export async function executeApply(source: string, target: string, projectPath: string, dryRun = false): Promise<void> {
   const sourceAdapter = adapters[source];
-  if (!sourceAdapter) {
-    console.error(`Unknown agent: ${source}`);
-    process.exit(1);
-  }
+  if (!sourceAdapter) { console.error(`Unknown agent: ${source}`); process.exit(1); }
 
   const bundle = await sourceAdapter.scanProject({ root: projectPath });
   const resources = normalizeBundle(bundle);
@@ -38,6 +35,16 @@ export async function executeApply(source: string, target: string, projectPath: 
       targetPath: f.path,
       content: f.content
     }));
+
+  if (dryRun) {
+    console.log(`\nDry run: ${source} → ${target}`);
+    console.log(`Would create ${ops.length} files:\n`);
+    for (const op of ops) {
+      console.log(`  + ${op.targetPath}`);
+    }
+    console.log('\nNo files written.');
+    return;
+  }
 
   const tx = createTransaction(ops);
   await applyTransaction(tx, projectPath);
