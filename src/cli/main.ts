@@ -3,6 +3,7 @@
 import { showHelp } from './commands/help.js';
 import { executeScan } from './commands/scan.js';
 import { executePlan } from './commands/plan.js';
+import { executeDiff } from './commands/diff.js';
 
 const args = process.argv.slice(2);
 
@@ -36,8 +37,21 @@ switch (command) {
     });
     break;
   }
+  case 'diff': {
+    const source = args[1];
+    const target = args[2];
+    const path = args[3] || '.';
+    if (!source || !target) {
+      console.error('Usage: agentbridge diff <source> <target> [path]');
+      process.exit(1);
+    }
+    executeDiff(source, target, path).catch(err => {
+      console.error('Error:', err.message);
+      process.exit(1);
+    });
+    break;
+  }
   case 'doctor':
-  case 'diff':
   case 'export':
   case 'import':
   case 'apply':
