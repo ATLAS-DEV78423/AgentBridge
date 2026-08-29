@@ -1,12 +1,7 @@
-import { claudeAdapter } from '../../adapters/claude-code/index.js';
-import { openCodeAdapter } from '../../adapters/opencode/index.js';
-import { kiloAdapter } from '../../adapters/kilo/index.js';
-import { AgentAdapter } from '../../core/scanner/scanner.js';
-
-const adapters: AgentAdapter[] = [claudeAdapter, openCodeAdapter, kiloAdapter];
+import { adapterList } from '../../adapters/registry.js';
 
 export async function executeScan(projectPath: string): Promise<void> {
-  for (const adapter of adapters) {
+  for (const adapter of adapterList) {
     const result = await adapter.detect({ root: projectPath });
     if (result.detected) {
       const bundle = await adapter.scanProject({ root: projectPath });

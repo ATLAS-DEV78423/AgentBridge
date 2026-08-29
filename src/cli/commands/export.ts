@@ -1,15 +1,6 @@
-import { claudeAdapter } from '../../adapters/claude-code/index.js';
-import { openCodeAdapter } from '../../adapters/opencode/index.js';
-import { kiloAdapter } from '../../adapters/kilo/index.js';
-import { AgentAdapter } from '../../core/scanner/scanner.js';
+import { adapters } from '../../adapters/registry.js';
 import { exportBundle } from '../../core/bundle/export.js';
 import { output, OutputFormat } from '../output/formatter.js';
-
-const adapters: Record<string, AgentAdapter> = {
-  'claude-code': claudeAdapter,
-  'opencode': openCodeAdapter,
-  'kilo': kiloAdapter
-};
 
 export async function executeExport(
   agent: string | undefined,

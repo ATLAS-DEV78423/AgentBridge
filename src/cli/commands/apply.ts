@@ -1,20 +1,11 @@
-import { claudeAdapter } from '../../adapters/claude-code/index.js';
-import { openCodeAdapter as opencodeAdapter } from '../../adapters/opencode/index.js';
-import { kiloAdapter } from '../../adapters/kilo/index.js';
-import { AgentAdapter } from '../../core/scanner/scanner.js';
+import { adapters } from '../../adapters/registry.js';
 import { normalizeBundle } from '../../core/normalize/normalizer.js';
 import { writeOpenCodeFiles } from '../../adapters/opencode/writer.js';
 import { createTransaction, applyTransaction } from '../../core/transaction/transaction.js';
 
-const adapters: Record<string, AgentAdapter> = {
-  'claude-code': claudeAdapter,
-  'opencode': opencodeAdapter,
-  'kilo': kiloAdapter
-};
-
 export async function executeApply(source: string, target: string, projectPath: string, dryRun = false): Promise<void> {
   const sourceAdapter = adapters[source];
-  if (!sourceAdapter) { console.error(`Unknown agent: ${source}`); process.exit(1); }
+  if (!sourceAdapter) { console.error(`Unknown agent: ${source}. Supported: ${Object.keys(adapters).join(', ')}`); process.exit(1); }
 
   const bundle = await sourceAdapter.scanProject({ root: projectPath });
   const resources = normalizeBundle(bundle);

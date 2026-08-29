@@ -1,16 +1,7 @@
-import { claudeAdapter } from '../../adapters/claude-code/index.js';
-import { openCodeAdapter } from '../../adapters/opencode/index.js';
-import { kiloAdapter } from '../../adapters/kilo/index.js';
-import { AgentAdapter } from '../../core/scanner/scanner.js';
+import { adapters } from '../../adapters/registry.js';
 import { normalizeBundle } from '../../core/normalize/normalizer.js';
 import { evaluateCompatibility } from '../../core/compatibility/engine.js';
 import { getRulesForMigration } from '../../registry/rules.js';
-
-const adapters: Record<string, AgentAdapter> = {
-  'claude-code': claudeAdapter,
-  'opencode': openCodeAdapter,
-  'kilo': kiloAdapter
-};
 
 export async function executePlan(source: string, target: string, projectPath: string): Promise<void> {
   const sourceAdapter = adapters[source];

@@ -1,9 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { claudeAdapter } from '../../adapters/claude-code/index.js';
-import { openCodeAdapter } from '../../adapters/opencode/index.js';
-import { kiloAdapter } from '../../adapters/kilo/index.js';
-import { AgentAdapter } from '../../core/scanner/scanner.js';
+import { adapterLabels } from '../../adapters/registry.js';
 import { output, OutputFormat } from '../output/formatter.js';
 
 type CheckResult = {
@@ -11,12 +8,6 @@ type CheckResult = {
   status: 'ok' | 'warning' | 'error';
   message: string;
 };
-
-const adapters: { adapter: AgentAdapter; label: string }[] = [
-  { adapter: claudeAdapter, label: 'Claude Code' },
-  { adapter: openCodeAdapter, label: 'OpenCode' },
-  { adapter: kiloAdapter, label: 'Kilo Code' }
-];
 
 export async function executeDoctor(projectPath: string, target?: string, fmt: OutputFormat = 'human'): Promise<void> {
   const checks: CheckResult[] = [];
@@ -30,7 +21,7 @@ export async function executeDoctor(projectPath: string, target?: string, fmt: O
   }
 
   // Check 2: Detect agents
-  for (const { adapter, label } of adapters) {
+  for (const { adapter, label } of adapterLabels) {
     const result = await adapter.detect({ root: projectPath });
     if (result.detected) {
       checks.push({ name: `detect-${adapter.id}`, status: 'ok', message: `${label} detected (${result.confidence} confidence)` });
@@ -41,7 +32,7 @@ export async function executeDoctor(projectPath: string, target?: string, fmt: O
 
   // Check 3: Target agent (if specified)
   if (target) {
-    const targetAdapter = adapters.find(a => a.adapter.id === target);
+    const targetAdapter = adapterLabels.find(a => a.adapter.id === target);
     if (targetAdapter) {
       checks.push({ name: 'target-agent', status: 'ok', message: `Target agent ${targetAdapter.label} is supported` });
     } else {

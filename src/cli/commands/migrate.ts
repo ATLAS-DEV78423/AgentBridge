@@ -1,18 +1,9 @@
-import { claudeAdapter } from '../../adapters/claude-code/index.js';
-import { openCodeAdapter as opencodeAdapter } from '../../adapters/opencode/index.js';
-import { kiloAdapter } from '../../adapters/kilo/index.js';
-import { AgentAdapter } from '../../core/scanner/scanner.js';
+import { adapters } from '../../adapters/registry.js';
 import { normalizeBundle } from '../../core/normalize/normalizer.js';
 import { evaluateCompatibility } from '../../core/compatibility/engine.js';
 import { getRulesForMigration } from '../../registry/rules.js';
 import { writeOpenCodeFiles } from '../../adapters/opencode/writer.js';
 import { createTransaction, applyTransaction } from '../../core/transaction/transaction.js';
-
-const adapters: Record<string, AgentAdapter> = {
-  'claude-code': claudeAdapter,
-  'opencode': opencodeAdapter,
-  'kilo': kiloAdapter
-};
 
 export async function executeMigrate(source: string, target: string, projectPath: string): Promise<void> {
   const sourceAdapter = adapters[source];
