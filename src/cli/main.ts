@@ -2,6 +2,7 @@
 
 import { showHelp } from './commands/help.js';
 import { executeScan } from './commands/scan.js';
+import { executePlan } from './commands/plan.js';
 
 const args = process.argv.slice(2);
 
@@ -21,9 +22,22 @@ switch (command) {
     });
     break;
   }
+  case 'plan': {
+    const source = args[1];
+    const target = args[2];
+    const path = args[3] || '.';
+    if (!source || !target) {
+      console.error('Usage: agentbridge plan <source> <target> [path]');
+      process.exit(1);
+    }
+    executePlan(source, target, path).catch(err => {
+      console.error('Error:', err.message);
+      process.exit(1);
+    });
+    break;
+  }
   case 'doctor':
   case 'diff':
-  case 'plan':
   case 'export':
   case 'import':
   case 'apply':
@@ -33,6 +47,6 @@ switch (command) {
     process.exit(1);
   default:
     console.error(`Unknown command: ${command}`);
-    console.log('Run "agent-migrate --help" for usage.');
+    console.log('Run "agentbridge --help" for usage.');
     process.exit(1);
 }

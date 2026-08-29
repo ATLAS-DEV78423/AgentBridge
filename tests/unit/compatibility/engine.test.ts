@@ -54,3 +54,21 @@ describe('Compatibility Engine', () => {
     expect(results[1].compatibility.status).toBe(MigrationStatus.UNSUPPORTED);
   });
 });
+
+import { evaluateResources } from '../../../src/core/compatibility/engine.js';
+import { NormalizedResource } from '../../../src/core/normalize/normalizer.js';
+
+describe('Enhanced Compatibility Engine', () => {
+  it('evaluates multiple resources', () => {
+    const resources: NormalizedResource[] = [
+      { id: '1', type: 'instruction', name: 'AGENTS.md', capability: 'instruction',
+        provenance: { sourceAgent: 'claude-code', sourcePath: 'AGENTS.md', scope: 'project', originalHash: 'abc' } },
+      { id: '2', type: 'hook', name: 'pre-commit', capability: 'hook',
+        provenance: { sourceAgent: 'claude-code', sourcePath: '.claude/hooks/pre-commit', scope: 'project', originalHash: 'def' } }
+    ];
+    const results = evaluateResources(resources, 'claude-code', 'opencode');
+    expect(results.length).toBe(2);
+    expect(results[0].status).toBe('DIRECT');
+    expect(results[1].status).toBe('UNSUPPORTED');
+  });
+});

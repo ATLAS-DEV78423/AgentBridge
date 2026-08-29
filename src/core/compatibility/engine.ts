@@ -49,3 +49,27 @@ export function evaluateCompatibility(
     warnings: []
   };
 }
+
+import { getRules } from '../../registry/rules.js';
+import { NormalizedResource } from '../normalize/normalizer.js';
+
+export function evaluateResources(
+  resources: NormalizedResource[],
+  source: string,
+  target: string
+): CompatibilityResult[] {
+  const rules = getRules(source, target);
+  return resources.map(r => {
+    const rule = rules.find(rule => rule.sourceCapability === r.capability);
+    return {
+      resourceId: r.id,
+      sourceCapability: r.capability,
+      targetCapability: rule?.targetCapability,
+      status: rule?.status || MigrationStatus.UNSUPPORTED,
+      method: rule?.method || 'omit',
+      confidence: rule?.confidence || 'high',
+      reasons: rule?.reasons || ['No rule found'],
+      warnings: rule?.warnings || []
+    };
+  });
+}
