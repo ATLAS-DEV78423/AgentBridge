@@ -20,6 +20,7 @@ Commands:
   rollback <path> <migration-id>  Rollback a migration
   history [path]                  List past migrations
   verify [path]                   Verify migration results
+  watch <source> <target> [path]  Auto-sync configs on file changes
 
 Options:
   --help, -h                      Show this help message

@@ -12,6 +12,7 @@ import { executeApply } from './commands/apply.js';
 import { executeRollback } from './commands/rollback.js';
 import { executeMigrate } from './commands/migrate.js';
 import { executeHistory } from './commands/history.js';
+import { executeWatch } from './commands/watch.js';
 import { setOutputFormat, OutputFormat } from './output/formatter.js';
 
 const args = process.argv.slice(2);
@@ -92,6 +93,12 @@ switch (command) {
   case 'history': {
     const path = args[1] || '.';
     executeHistory(path, fmt).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    break;
+  }
+  case 'watch': {
+    const source = args[1], target = args[2], path = args[3] || '.';
+    if (!source || !target) { console.error('Usage: agent-migrate watch <source> <target> [path]'); process.exit(2); }
+    executeWatch(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   default:
