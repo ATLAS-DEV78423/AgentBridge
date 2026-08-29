@@ -1,56 +1,36 @@
 # Changelog
 
-## [0.1.0] - 2026-08-29
+## [1.0.0] - 2026-08-29
 
 ### Added
-- Initial project setup with TypeScript + Vitest
-- CLI shell with `--help` command
-- Canonical model types (AgentBundle, Provenance, CompatibilityResult)
-- Filesystem primitives (atomicWrite, backupFile, restoreBackup, safePath, hashFile)
-- Claude Code scanner with fixtures
-- OpenCode scanner with fixtures
-- Kilo scanner with fixtures
-- Compatibility engine with rule evaluation
-- Capability registry for agent support matrix
-- Compatibility rules for agent pairs
-- Normalizer for scanner output
-- Plan command for migration compatibility analysis
-- 53 tests passing
+- Multi-agent support: Claude Code, OpenCode, Kilo Code
+- Scan command for discovering agent configurations
+- Plan command for migration compatibility reports
+- Diff command for previewing file changes
+- Doctor command for environment validation
+- Export command for portable bundles
+- Import command for bundle validation
+- Verify command for migration verification
+- JSON output mode (`--json` flag)
+- Proper exit codes (0 success, 1 error, 2 invalid args)
+- Transaction engine with backup and rollback
+- Capability registry for agent feature mapping
+- Compatibility rules engine
+- Normalizer for converting scanner output to canonical model
+- Secret redaction in exported bundles
+- Checksum verification for bundle integrity
 
-### Commands
-- `agentbridge scan [path]` - Scan for agent configurations
-- `agentbridge plan <src> <tgt> [path]` - Generate migration plan
+### Architecture
+- Modular adapter system for adding new agents
+- Canonical resource model for cross-agent compatibility
+- TDD with 87 tests passing
+- Zero runtime dependencies
 
-### Supported Agents
-- Claude Code
-- OpenCode
-- Kilo
+## [0.1.0] - 2026-08-28
 
-## Roadmap
-
-### Phase 5 - First Real Migration Path
-- Claude → OpenCode deterministic migration
-- Target file generation
-- Diff output
-
-### Phase 6 - Transaction Safety
-- Transaction IDs
-- Atomic writes
-- Backup and rollback
-- Migration history
-
-### Phase 7 - CLI Polish
-- JSON output mode
-- Exit codes
-- Doctor command
-- Diff command
-
-### Phase 8 - Portable Bundles
-- Export/import bundle format
-- Bundle validation
-- Secret redaction
-
-### Phase 9 - Verification
-- File-level verification
-- Hash verification
-- Migration reports
+### Added
+- Initial project setup
+- Claude Code scanner
+- Basic CLI shell
+- Canonical model types
+- Filesystem primitives

@@ -1,8 +1,12 @@
 {
   "name": "agent-migrate",
-  "version": "0.1.0",
-  "description": "Local-first, cross-platform migration tool for coding agent environments",
+  "version": "1.0.0",
+  "description": "Safely migrate AI coding agent configuration between different agents",
   "type": "module",
+  "main": "dist/cli/main.js",
+  "bin": {
+    "agent-migrate": "dist/cli/main.js"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
@@ -11,15 +15,35 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "migration",
     "agent",
-    "cli"
+    "cli",
+    "claude",
+    "opencode",
+    "kilo",
+    "ai",
+    "coding"
   ],
-  "author": "",
+  "author": "ATLAS-DEV78423",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ATLAS-DEV78423/AgentBridge.git"
+  },
+  "homepage": "https://github.com/ATLAS-DEV78423/AgentBridge#readme",
+  "bugs": {
+    "url": "https://github.com/ATLAS-DEV78423/AgentBridge/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "devDependencies": {
     "@types/node": "^26.4.0",
     "tsx": "^4.23.12",

@@ -1,113 +1,106 @@
 # AgentBridge
 
-Local-first, cross-platform migration tool for coding agent environments.
+> Safely migrate your AI coding agent configuration between different agents.
 
-Safely move your coding agent configuration from one AI agent to another — Claude Code, OpenCode, Kilo, and more.
+A local-first CLI tool that discovers, normalizes, compares, and migrates coding agent environments (Claude Code ↔ OpenCode ↔ Kilo Code) with full transparency and rollback support.
 
 ## Features
 
-- **Scan** — detect agent configurations in any project
-- **Plan** — analyze compatibility between source and target agents
-- **Apply** — execute migrations with atomic writes and rollback
-- **Verify** — confirm migrations succeeded
-- **Rollback** — undo any migration safely
+- **Multi-agent support**: Claude Code, OpenCode, Kilo Code
+- **Safe migration**: Backup before overwrite, atomic writes, full rollback
+- **Transparent**: Every change is explainable with clear status indicators
+- **Portable bundles**: Export/import agent configs across machines
+- **JSON output**: Machine-readable output for automation
+- **Zero dependencies**: Only uses Node.js built-in modules
 
-## Supported Agents
+## Installation
 
-| Agent | Status |
-|-------|--------|
-| Claude Code | ✅ Full support |
-| OpenCode | ✅ Full support |
-| Kilo | ✅ Full support |
+```bash
+# From npm (when published)
+npm install -g agent-migrate
+
+# From source
+git clone https://github.com/ATLAS-DEV78423/AgentBridge.git
+cd AgentBridge
+npm install
+npm link
+```
 
 ## Quick Start
 
 ```bash
-# Install
-git clone https://github.com/ATLAS-DEV78423/AgentBridge.git
-cd AgentBridge
-npm install
+# Scan your project for agent configs
+agent-migrate scan
 
-# Scan for agent configurations
-npx tsx src/cli/main.ts scan .
+# See what would change when migrating to OpenCode
+agent-migrate plan claude-code opencode
 
-# Generate migration plan
-npx tsx src/cli/main.ts plan claude-code opencode .
+# Preview the file changes
+agent-migrate diff claude-code opencode
+
+# Validate your environment
+agent-migrate doctor
 ```
 
 ## Commands
 
-```bash
-agentbridge --help                 # Show help
-agentbridge scan [path]            # Scan for agent configurations
-agentbridge plan <src> <tgt> [p]   # Generate migration plan
-agentbridge doctor [path]          # Diagnose environment
-agentbridge diff <src> <tgt> [p]   # Compare configurations
-agentbridge export [path]          # Export portable bundle
-agentbridge import <bundle>        # Import bundle
-agentbridge apply <plan>           # Apply migration
-agentbridge rollback <id>          # Undo migration
-agentbridge verify [id]            # Verify migration
-```
+| Command | Description |
+|---------|-------------|
+| `scan [path]` | Scan directory for agent configurations |
+| `plan <source> <target> [path]` | Show migration compatibility report |
+| `diff <source> <target> [path]` | Preview file changes |
+| `doctor [path]` | Validate environment and detect agents |
+| `export [agent] [path] [output]` | Export config to portable bundle |
+| `import <bundle>` | Import and validate a bundle |
+| `verify [path]` | Verify migration results |
 
-## Migration Pipeline
+All commands support `--json` for structured output.
 
-```
-scan → normalize → compat → plan → apply → verify → rollback
-```
+## Migration Status Types
 
-1. **Scan** — discover what agent configurations exist
-2. **Normalize** — convert to canonical resource model
-3. **Compatibility** — evaluate what can migrate
-4. **Plan** — generate human-readable migration analysis
-5. **Apply** — execute with atomic writes and backups
-6. **Verify** — confirm migration succeeded
-7. **Rollback** — undo if needed
-
-## Development
-
-```bash
-npm test           # Run tests (53+ tests)
-npm run typecheck  # Type check
-npm run build      # Build for production
-```
+| Status | Meaning |
+|--------|---------|
+| `EXACT` | Equivalent representation, no semantic change |
+| `DIRECT` | Direct target-supported representation |
+| `ADAPTED` | Transformed with known differences |
+| `PARTIAL` | Some resources can migrate, some cannot |
+| `UNSUPPORTED` | No safe target representation exists |
+| `BLOCKED` | Migration cannot proceed safely |
 
 ## Architecture
 
 ```
-src/
-├── cli/              # CLI commands
-├── core/
-│   ├── model/        # Canonical data types
-│   ├── scanner/      # Scanner interface
-│   ├── normalize/    # Bundle normalizer
-│   ├── compatibility/ # Compatibility engine
-│   └── filesystem/   # Atomic writes, backup, restore
-├── adapters/
-│   ├── claude-code/  # Claude Code scanner
-│   ├── opencode/     # OpenCode scanner
-│   └── kilo/         # Kilo scanner
-└── registry/
-    ├── capabilities.ts  # Agent support matrix
-    └── rules.ts         # Compatibility rules
+Scanner → Source Model → Normalizer → Canonical Model
+    ↓
+Capability Registry → Compatibility Rules
+    ↓
+Migration Planner → Target Writer → Transaction Engine
+    ↓
+Backup → Atomic Write → Verify → Rollback (if needed)
 ```
 
-## Testing
+## Supported Migrations
 
-Tests use Vitest with TDD approach:
+| Source | Target | Status |
+|--------|--------|--------|
+| Claude Code | OpenCode | ✅ Supported |
+| Claude Code | Kilo Code | ✅ Supported |
+| OpenCode | Claude Code | 🔜 Planned |
+| Kilo Code | Claude Code | 🔜 Planned |
 
-- Unit tests for each module
-- Integration tests for adapters
-- Fixture-based testing with synthetic agent directories
+## Development
+
+```bash
+# Run tests
+npm test
+
+# Type check
+npm run typecheck
+
+# Run in development
+npx tsx src/cli/main.ts --help
+```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## Acknowledgments
-
-Built with TypeScript, Node.js, and Vitest.
+MIT
