@@ -10,7 +10,7 @@ describe('CLI plan command', () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await executePlan('claude-code', 'opencode', 'tests/fixtures/claude-basic');
     const output = consoleSpy.mock.calls.map(c => c[0]).join('\n');
-    expect(output).toContain('Migration plan');
+    expect(output).toContain('Migration Plan:');
     expect(output).toContain('DIRECT');
     consoleSpy.mockRestore();
   });

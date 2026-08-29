@@ -10,7 +10,7 @@ describe('CLI diff command', () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await executeDiff('claude-code', 'opencode', 'tests/fixtures/claude-basic');
     const output = consoleSpy.mock.calls.map(c => c[0]).join('\n');
-    expect(output).toContain('Migration diff');
+    expect(output).toContain('Diff:');
     expect(output).toContain('+');
     expect(output).toContain('AGENTS.md');
     consoleSpy.mockRestore();

@@ -1,4 +1,4 @@
-import { NormalizedResource } from '../normalize/normalizer.js';
+import { CanonicalResource } from '../normalize/normalizer.js';
 
 export type TargetFile = {
   path: string;
@@ -8,5 +8,5 @@ export type TargetFile = {
 
 export interface TargetWriter {
   id: string;
-  write(resources: NormalizedResource[], targetRoot: string): TargetFile[];
+  write(resources: CanonicalResource[], targetRoot: string): TargetFile[];
 }

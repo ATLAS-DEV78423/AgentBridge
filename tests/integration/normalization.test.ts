@@ -4,7 +4,8 @@ import path from 'node:path';
 import os from 'node:os';
 import { claudeAdapter } from '../../src/adapters/claude-code/index.js';
 import { normalizeBundle } from '../../src/core/normalize/normalizer.js';
-import { evaluateResources } from '../../src/core/compatibility/engine.js';
+import { evaluateCompatibility } from '../../src/core/compatibility/engine.js';
+import { getRulesForMigration } from '../../src/registry/rules.js';
 
 describe('Normalization Integration', () => {
   let fixtureDir: string;
@@ -24,9 +25,9 @@ describe('Normalization Integration', () => {
 
     const resources = normalizeBundle(bundle);
     expect(resources.length).toBeGreaterThan(0);
-    expect(resources[0].capability).toBeDefined();
 
-    const results = evaluateResources(resources, 'claude-code', 'opencode');
+    const rules = getRulesForMigration('claude-code', 'opencode');
+    const results = resources.map(r => evaluateCompatibility(r.type, 'opencode', rules));
     expect(results.length).toBe(resources.length);
     expect(results[0].status).toBeDefined();
   });

@@ -1,12 +1,12 @@
-import { NormalizedResource } from '../../core/normalize/normalizer.js';
+import { CanonicalResource } from '../../core/normalize/normalizer.js';
 import { TargetFile } from '../../core/translate/writer.js';
 
-export function writeOpenCodeFiles(resources: NormalizedResource[], targetRoot: string): TargetFile[] {
+export function writeOpenCodeFiles(resources: CanonicalResource[], targetRoot: string): TargetFile[] {
   const files: TargetFile[] = [];
 
   for (const r of resources) {
-    switch (r.capability) {
-      case 'instruction':
+    switch (r.type) {
+      case 'instructions':
         // Instructions copy directly as AGENTS.md
         files.push({
           path: r.name,
@@ -43,7 +43,7 @@ export function writeOpenCodeFiles(resources: NormalizedResource[], targetRoot: 
         }
         break;
 
-      case 'skill':
+      case 'skills':
         // Skills -> commands (simplified)
         if (r.content) {
           files.push({
@@ -54,7 +54,7 @@ export function writeOpenCodeFiles(resources: NormalizedResource[], targetRoot: 
         }
         break;
 
-      case 'mcp':
+      case 'mcpServers':
         // MCP config copies directly
         if (r.content) {
           files.push({
@@ -65,10 +65,10 @@ export function writeOpenCodeFiles(resources: NormalizedResource[], targetRoot: 
         }
         break;
 
-      case 'hook':
-      case 'agent':
-      case 'permission':
-      case 'command':
+      case 'hooks':
+      case 'agents':
+      case 'permissions':
+      case 'commands':
       default:
         // Skip unsupported for now
         files.push({

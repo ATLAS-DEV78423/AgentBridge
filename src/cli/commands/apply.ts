@@ -1,5 +1,5 @@
 import { claudeAdapter } from '../../adapters/claude-code/index.js';
-import { opencodeAdapter } from '../../adapters/opencode/index.js';
+import { openCodeAdapter as opencodeAdapter } from '../../adapters/opencode/index.js';
 import { kiloAdapter } from '../../adapters/kilo/index.js';
 import { AgentAdapter } from '../../core/scanner/scanner.js';
 import { normalizeBundle } from '../../core/normalize/normalizer.js';
