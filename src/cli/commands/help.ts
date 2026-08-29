@@ -16,7 +16,9 @@ Commands:
   import <bundle>                 Import and validate a bundle
   migrate <source> <target> [path] Scan → plan → apply in one step
   apply <source> <target> [path]  Apply a migration
+  apply <source> <target> [path] --dry-run  Preview without writing
   rollback <path> <migration-id>  Rollback a migration
+  history [path]                  List past migrations
   verify [path]                   Verify migration results
 
 Options:
