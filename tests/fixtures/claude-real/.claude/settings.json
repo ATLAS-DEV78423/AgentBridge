@@ -1,0 +1,16 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "permissions": {
+    "allow": [
+      "read",
+      "write",
+      "execute"
+    ],
+    "deny": [
+      "delete",
+      "admin"
+    ]
+  },
+  "theme": "dark",
+  "fontSize": 14
+}
