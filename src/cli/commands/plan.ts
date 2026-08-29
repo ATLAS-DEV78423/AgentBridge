@@ -1,36 +1,27 @@
 import { adapters } from '../../adapters/registry.js';
-import { normalizeBundle } from '../../core/normalize/normalizer.js';
-import { evaluateCompatibility } from '../../core/compatibility/engine.js';
-import { getRulesForMigration } from '../../registry/rules.js';
+import { flattenBundle, planMigration } from '../../core/pipeline.js';
 
 export async function executePlan(source: string, target: string, projectPath: string): Promise<void> {
   const sourceAdapter = adapters[source];
-  const targetAdapter = adapters[target];
 
-  if (!sourceAdapter || !targetAdapter) {
+  if (!sourceAdapter || !adapters[target]) {
     console.error(`Unknown agent: ${!sourceAdapter ? source : target}`);
     console.log('Supported agents: claude-code, opencode, kilo');
     process.exit(1);
   }
 
   const bundle = await sourceAdapter.scanProject({ root: projectPath });
-  const resources = normalizeBundle(bundle);
-  const rules = getRulesForMigration(source, target);
+  const resources = flattenBundle(bundle);
+  const plan = planMigration(source, target, resources);
 
   console.log(`\nMigration Plan: ${source} → ${target}`);
-  console.log(`Source: ${bundle.metadata.sourceAgent?.name}`);
+  console.log(`Source: ${bundle.sourceAgent}`);
   console.log(`Resources: ${resources.length}`);
   console.log('');
 
-  for (const resource of resources) {
-    const result = evaluateCompatibility(resource.type, target, rules);
-    const icon = result.status === 'DIRECT' ? '✓' : result.status === 'UNSUPPORTED' ? '✗' : '~';
-    console.log(`  ${icon} ${resource.name} (${resource.type}) → ${result.status}`);
-    if (result.warnings.length > 0) {
-      for (const w of result.warnings) {
-        console.log(`    ⚠ ${w}`);
-      }
-    }
+  for (const { resource, compatibility } of plan) {
+    const icon = compatibility.status === 'DIRECT' ? '✓' : compatibility.status === 'UNSUPPORTED' ? '✗' : '~';
+    console.log(`  ${icon} ${resource.name} (${resource.type}) → ${compatibility.status}`);
   }
 
   console.log('\nNo files changed.');

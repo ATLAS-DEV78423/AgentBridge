@@ -1,23 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { AgentBundle } from '../../core/model/types.js';
-import { ScanContext, createResource } from '../../core/scanner/scanner.js';
+import { createResource } from '../../core/scanner/scanner.js';
 
-export async function scanKiloProject(ctx: ScanContext): Promise<AgentBundle> {
+export async function scanKiloProject(ctx: { root: string }): Promise<AgentBundle> {
   const bundle: AgentBundle = {
-    schemaVersion: '1.0.0',
-    metadata: {
-      name: path.basename(ctx.root),
-      sourceAgent: { id: 'kilo', name: 'Kilo Code' },
-      sourceRoot: ctx.root
-    },
+    sourceAgent: 'Kilo Code',
     instructions: [],
-    skills: [],
-    commands: [],
-    agents: [],
     mcpServers: [],
-    permissions: [],
-    hooks: [],
     opaque: []
   };
 
@@ -28,9 +18,7 @@ export async function scanKiloProject(ctx: ScanContext): Promise<AgentBundle> {
       const stat = await fs.stat(filePath);
       if (stat.isFile()) {
         const content = await fs.readFile(filePath, 'utf-8');
-        const resource = await createResource('instruction', file, filePath, ctx.root, content);
-        resource.provenance.sourceAgent = 'kilo';
-        bundle.instructions.push(resource);
+        bundle.instructions.push(createResource('instruction', file, filePath, ctx.root, content));
       }
     } catch { /* skip */ }
   }
@@ -39,9 +27,7 @@ export async function scanKiloProject(ctx: ScanContext): Promise<AgentBundle> {
   const configPath = path.join(ctx.root, '.kilo', 'config.json');
   try {
     const content = await fs.readFile(configPath, 'utf-8');
-    const resource = await createResource('opaque', '.kilo/config.json', configPath, ctx.root, content);
-    resource.provenance.sourceAgent = 'kilo';
-    bundle.opaque.push(resource);
+    bundle.opaque.push(createResource('opaque', '.kilo/config.json', configPath, ctx.root, content));
   } catch { /* config doesn't exist */ }
 
   return bundle;

@@ -1,4 +1,3 @@
-import { rollbackTransaction, Transaction, TransactionOperation } from '../../core/transaction/transaction.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -12,43 +11,25 @@ export async function executeRollback(projectPath: string, migrationId: string):
     process.exit(1);
   }
 
-  // Read backed up files to determine operations
-  const files = await readDirRecursive(backupBase);
-  const ops: TransactionOperation[] = [];
+  // Read manifest
+  let originals: Record<string, string | null> = {};
+  try {
+    const manifest = JSON.parse(await fs.readFile(path.join(backupBase, 'manifest.json'), 'utf-8'));
+    originals = manifest.originals || {};
+  } catch { /* no manifest */ }
 
-  for (const file of files) {
-    const relativePath = path.relative(backupBase, file);
-    const content = await fs.readFile(file, 'utf-8');
-    ops.push({
-      id: `rollback-${relativePath}`,
-      type: 'modify',
-      targetPath: relativePath,
-      content
-    });
-  }
-
-  const tx: Transaction = {
-    id: migrationId,
-    operations: ops,
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  };
-
-  await rollbackTransaction(tx, projectPath);
-  console.log(`\nMigration ${migrationId} rolled back.`);
-  console.log('Source files restored.');
-}
-
-async function readDirRecursive(dir: string): Promise<string[]> {
-  const files: string[] = [];
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await readDirRecursive(fullPath));
+  // Restore: null = file was created during migration → delete it
+  //          string = original content → write it back
+  for (const [relPath, originalContent] of Object.entries(originals)) {
+    const fullPath = path.join(projectPath, relPath);
+    if (originalContent === null) {
+      try { await fs.unlink(fullPath); } catch { /* already gone */ }
     } else {
-      files.push(fullPath);
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.writeFile(fullPath, originalContent);
     }
   }
-  return files;
+
+  console.log(`\nMigration ${migrationId} rolled back.`);
+  console.log('Source files restored.');
 }

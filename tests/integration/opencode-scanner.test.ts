@@ -19,7 +19,7 @@ describe('OpenCode scanner', () => {
 
   it('scans OpenCode project correctly', async () => {
     const bundle = await scanOpenCodeProject({ root: FIXTURE });
-    expect(bundle.metadata.sourceAgent?.id).toBe('opencode');
+    expect(bundle.sourceAgent).toBe('OpenCode');
     expect(bundle.instructions.length).toBe(1);
     expect(bundle.instructions[0].name).toBe('AGENTS.md');
     expect(bundle.mcpServers.length).toBe(1);

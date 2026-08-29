@@ -19,7 +19,7 @@ describe('Kilo scanner', () => {
 
   it('scans Kilo project correctly', async () => {
     const bundle = await scanKiloProject({ root: FIXTURE });
-    expect(bundle.metadata.sourceAgent?.id).toBe('kilo');
+    expect(bundle.sourceAgent).toBe('Kilo Code');
     expect(bundle.instructions.length).toBe(1);
     expect(bundle.opaque.length).toBe(1);
   });

@@ -1,4 +1,4 @@
-import { AgentAdapter, ScanContext } from '../../core/scanner/scanner.js';
+import { AgentAdapter } from '../../core/scanner/scanner.js';
 import { detectClaude } from './detector.js';
 import { scanClaudeProject } from './scanner.js';
 

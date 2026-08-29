@@ -8,11 +8,8 @@ describe('CLI', () => {
     expect(HELP_TEXT).toContain('scan');
     expect(HELP_TEXT).toContain('plan');
     expect(HELP_TEXT).toContain('diff');
-    expect(HELP_TEXT).toContain('doctor');
-    expect(HELP_TEXT).toContain('export');
-    expect(HELP_TEXT).toContain('import');
-    expect(HELP_TEXT).toContain('verify');
-    expect(HELP_TEXT).toContain('--json');
+    expect(HELP_TEXT).toContain('migrate');
+    expect(HELP_TEXT).toContain('rollback');
   });
 
   it('showHelp outputs help text', () => {

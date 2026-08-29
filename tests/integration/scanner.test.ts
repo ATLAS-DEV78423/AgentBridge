@@ -25,7 +25,6 @@ describe('Claude Scanner', () => {
       const result = await claudeAdapter.detect({ root: fixtureDir });
       expect(result.detected).toBe(true);
       expect(result.agent).toBe('claude-code');
-      expect(result.confidence).toBe('high');
     });
 
     it('does not detect agent in empty directory', async () => {
@@ -40,13 +39,6 @@ describe('Claude Scanner', () => {
     it('finds instructions', async () => {
       const state = await claudeAdapter.scanProject({ root: fixtureDir });
       expect(state.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('preserves file hashes', async () => {
-      const state = await claudeAdapter.scanProject({ root: fixtureDir });
-      for (const resource of state.instructions) {
-        expect(resource.provenance.originalHash).toMatch(/^[a-f0-9]{64}$/);
-      }
     });
 
     it('deterministic output for same fixture', async () => {

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { createTransaction, applyTransaction, rollbackTransaction } from '../../../src/core/transaction/transaction.js';
+import { createTransaction, applyTransaction } from '../../../src/core/transaction/transaction.js';
 
 let tmpDir: string;
 
@@ -17,14 +17,12 @@ afterEach(async () => {
 describe('transaction engine', () => {
   it('creates a new file', async () => {
     const tx = createTransaction([{
-      id: 'op1',
       type: 'create',
       targetPath: 'test.txt',
       content: 'hello'
     }]);
 
     await applyTransaction(tx, tmpDir);
-    expect(tx.status).toBe('applied');
 
     const content = await fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8');
     expect(content).toBe('hello');
@@ -34,48 +32,61 @@ describe('transaction engine', () => {
     await fs.writeFile(path.join(tmpDir, 'existing.txt'), 'original');
 
     const tx = createTransaction([{
-      id: 'op1',
-      type: 'modify',
+      type: 'create',
       targetPath: 'existing.txt',
       content: 'modified'
     }]);
 
     await applyTransaction(tx, tmpDir);
+
     const content = await fs.readFile(path.join(tmpDir, 'existing.txt'), 'utf-8');
     expect(content).toBe('modified');
-    expect(tx.operations[0].backupPath).toBeDefined();
+
+    // Verify manifest tracks original content
+    const backupDir = path.join(tmpDir, '.agentbridge', 'backups', tx.id);
+    const manifest = JSON.parse(await fs.readFile(path.join(backupDir, 'manifest.json'), 'utf-8'));
+    expect(manifest.originals['existing.txt']).toBe('original');
   });
 
-  it('rolls back to original state', async () => {
-    await fs.writeFile(path.join(tmpDir, 'existing.txt'), 'original');
-
+  it('tracks created files as null in manifest', async () => {
     const tx = createTransaction([{
-      id: 'op1',
-      type: 'modify',
-      targetPath: 'existing.txt',
-      content: 'modified'
-    }]);
-
-    await applyTransaction(tx, tmpDir);
-    await rollbackTransaction(tx, tmpDir);
-
-    const content = await fs.readFile(path.join(tmpDir, 'existing.txt'), 'utf-8');
-    expect(content).toBe('original');
-    expect(tx.status).toBe('rolled-back');
-  });
-
-  it('deletes a created file on rollback', async () => {
-    const tx = createTransaction([{
-      id: 'op1',
       type: 'create',
       targetPath: 'new.txt',
       content: 'new content'
     }]);
 
     await applyTransaction(tx, tmpDir);
-    expect(await fs.access(path.join(tmpDir, 'new.txt')).then(() => true, () => false)).toBe(true);
 
-    await rollbackTransaction(tx, tmpDir);
-    expect(await fs.access(path.join(tmpDir, 'new.txt')).then(() => true, () => false)).toBe(false);
+    const backupDir = path.join(tmpDir, '.agentbridge', 'backups', tx.id);
+    const manifest = JSON.parse(await fs.readFile(path.join(backupDir, 'manifest.json'), 'utf-8'));
+    expect(manifest.originals['new.txt']).toBeNull();
+  });
+
+  it('rolls back via manifest', async () => {
+    await fs.writeFile(path.join(tmpDir, 'existing.txt'), 'original');
+
+    const tx = createTransaction([{
+      type: 'create',
+      targetPath: 'existing.txt',
+      content: 'modified'
+    }]);
+
+    await applyTransaction(tx, tmpDir);
+
+    // Read manifest and restore
+    const backupDir = path.join(tmpDir, '.agentbridge', 'backups', tx.id);
+    const manifest = JSON.parse(await fs.readFile(path.join(backupDir, 'manifest.json'), 'utf-8'));
+
+    for (const [relPath, originalContent] of Object.entries(manifest.originals)) {
+      const fullPath = path.join(tmpDir, relPath);
+      if (originalContent === null) {
+        await fs.unlink(fullPath);
+      } else {
+        await fs.writeFile(fullPath, originalContent as string);
+      }
+    }
+
+    const content = await fs.readFile(path.join(tmpDir, 'existing.txt'), 'utf-8');
+    expect(content).toBe('original');
   });
 });

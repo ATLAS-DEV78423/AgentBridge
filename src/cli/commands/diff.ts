@@ -1,7 +1,5 @@
 import { adapters } from '../../adapters/registry.js';
-import { normalizeBundle } from '../../core/normalize/normalizer.js';
-import { evaluateCompatibility } from '../../core/compatibility/engine.js';
-import { getRulesForMigration } from '../../registry/rules.js';
+import { flattenBundle, planMigration } from '../../core/pipeline.js';
 
 export async function executeDiff(source: string, target: string, projectPath: string): Promise<void> {
   const sourceAdapter = adapters[source];
@@ -11,18 +9,17 @@ export async function executeDiff(source: string, target: string, projectPath: s
   }
 
   const bundle = await sourceAdapter.scanProject({ root: projectPath });
-  const resources = normalizeBundle(bundle);
-  const rules = getRulesForMigration(source, target);
+  const resources = flattenBundle(bundle);
+  const plan = planMigration(source, target, resources);
 
   console.log(`\nDiff: ${source} → ${target}`);
   console.log('');
 
   let hasChanges = false;
-  for (const resource of resources) {
-    const result = evaluateCompatibility(resource.type, target, rules);
-    if (result.status !== 'UNSUPPORTED') {
+  for (const { resource, compatibility } of plan) {
+    if (compatibility.status !== 'UNSUPPORTED') {
       hasChanges = true;
-      const action = result.method === 'copy' ? '+' : result.method === 'rewrite' ? '~' : '-';
+      const action = compatibility.method === 'copy' ? '+' : compatibility.method === 'rewrite' ? '~' : '-';
       console.log(`  ${action} ${resource.name} (${resource.type})`);
     }
   }

@@ -20,6 +20,6 @@ describe('Compatibility Rules', () => {
     expect(rule).toHaveProperty('sourceCapability');
     expect(rule).toHaveProperty('status');
     expect(rule).toHaveProperty('method');
-    expect(rule).toHaveProperty('confidence');
+    expect(rule).toHaveProperty('method');
   });
 });

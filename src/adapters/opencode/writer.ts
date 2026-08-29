@@ -1,10 +1,5 @@
-import { CanonicalResource } from '../../core/normalize/normalizer.js';
-
-type TargetFile = {
-  path: string;
-  content: string;
-  action: 'create' | 'update' | 'skip';
-};
+import { ResourceBase } from '../../core/model/types.js';
+import { TargetFile } from '../../core/writers.js';
 
 /** Translate Claude Code MCP server config to OpenCode format. */
 function translateMcpServer(claudeConfig: Record<string, unknown>): Record<string, unknown> {
@@ -26,7 +21,7 @@ function buildOpenCodeConfig(claudeSettings: Record<string, unknown>): Record<st
   return config;
 }
 
-export function writeOpenCodeFiles(resources: CanonicalResource[]): TargetFile[] {
+export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
   const files: TargetFile[] = [];
   const openCodeConfig: Record<string, unknown> = {};
   const mcpServers: Record<string, unknown> = {};
@@ -62,12 +57,10 @@ export function writeOpenCodeFiles(resources: CanonicalResource[]): TargetFile[]
     });
   }
 
-  // Second pass: write non-config resources
+  // Second pass: write instruction files
   for (const r of resources) {
     if (r.type === 'instructions') {
       files.push({ path: r.name, content: r.content || '', action: 'create' });
-    } else if (r.type === 'skills' && r.content) {
-      files.push({ path: `commands/${r.name}`, content: r.content, action: 'create' });
     }
   }
 

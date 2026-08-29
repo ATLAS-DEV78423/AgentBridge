@@ -7,36 +7,31 @@ describe('Compatibility Engine', () => {
     {
       id: 'claude-skill-to-opencode',
       sourceCapability: 'skill',
-      targetCapability: 'skill',
       method: 'copy',
       status: MigrationStatus.DIRECT,
-      confidence: 'high'
     },
     {
       id: 'claude-hook-to-opencode',
       sourceCapability: 'hook',
-      targetCapability: undefined,
       method: 'omit',
       status: MigrationStatus.UNSUPPORTED,
-      confidence: 'high'
     }
   ];
 
   it('evaluates direct mapping', () => {
-    const result = evaluateCompatibility('skill', 'opencode', rules);
+    const result = evaluateCompatibility('skill', rules);
     expect(result.status).toBe(MigrationStatus.DIRECT);
     expect(result.method).toBe('copy');
-    expect(result.confidence).toBe('high');
   });
 
   it('evaluates unsupported mapping', () => {
-    const result = evaluateCompatibility('hook', 'opencode', rules);
+    const result = evaluateCompatibility('hook', rules);
     expect(result.status).toBe(MigrationStatus.UNSUPPORTED);
     expect(result.method).toBe('omit');
   });
 
   it('returns unknown when no rule matches', () => {
-    const result = evaluateCompatibility('permission', 'opencode', rules);
+    const result = evaluateCompatibility('permission', rules);
     expect(result.status).toBe(MigrationStatus.UNSUPPORTED);
     expect(result.method).toBe('omit');
   });
@@ -48,7 +43,7 @@ describe('Compatibility Engine', () => {
     ];
     const results = resources.map(r => ({
       ...r,
-      compatibility: evaluateCompatibility(r.type, 'opencode', rules)
+      compatibility: evaluateCompatibility(r.type, rules)
     }));
     expect(results[0].compatibility.status).toBe(MigrationStatus.DIRECT);
     expect(results[1].compatibility.status).toBe(MigrationStatus.UNSUPPORTED);

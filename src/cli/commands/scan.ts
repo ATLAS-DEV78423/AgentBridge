@@ -1,20 +1,15 @@
-import { adapterList } from '../../adapters/registry.js';
+import { adapters } from '../../adapters/registry.js';
 
 export async function executeScan(projectPath: string): Promise<void> {
-  for (const adapter of adapterList) {
+  for (const adapter of Object.values(adapters)) {
     const result = await adapter.detect({ root: projectPath });
     if (result.detected) {
       const bundle = await adapter.scanProject({ root: projectPath });
-      console.log(`\nDetected: ${bundle.metadata.sourceAgent?.name || 'Unknown'}`);
+      console.log(`\nDetected: ${bundle.sourceAgent || 'Unknown'}`);
       console.log('');
       console.log('Found:');
       console.log(`  Instructions    ${bundle.instructions.length}`);
-      console.log(`  Skills          ${bundle.skills.length}`);
-      console.log(`  Commands        ${bundle.commands.length}`);
       console.log(`  MCP servers     ${bundle.mcpServers.length}`);
-      console.log(`  Agents          ${bundle.agents.length}`);
-      console.log(`  Permissions     ${bundle.permissions.length}`);
-      console.log(`  Hooks           ${bundle.hooks.length}`);
       console.log(`  Opaque          ${bundle.opaque.length}`);
       console.log('\nNo files changed.');
       return;
