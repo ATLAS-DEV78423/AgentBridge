@@ -5,6 +5,8 @@ import { executeScan } from './commands/scan.js';
 import { executePlan } from './commands/plan.js';
 import { executeDiff } from './commands/diff.js';
 import { executeDoctor } from './commands/doctor.js';
+import { executeExport } from './commands/export.js';
+import { executeImport } from './commands/import-bundle.js';
 import { setOutputFormat, OutputFormat } from './output/formatter.js';
 import { ExitCodes } from './output/exit-codes.js';
 
@@ -67,6 +69,28 @@ switch (command) {
     const path = args[1] || '.';
     const target = args[2];
     executeDoctor(path, target, fmt).catch(err => {
+      console.error('Error:', err.message);
+      process.exit(ExitCodes.GENERAL_ERROR);
+    });
+    break;
+  }
+  case 'export': {
+    const agent = args[1];
+    const path = args[2] || '.';
+    const output = args[3] || './agent-bundle.json';
+    executeExport(agent, path, output, fmt).catch(err => {
+      console.error('Error:', err.message);
+      process.exit(ExitCodes.GENERAL_ERROR);
+    });
+    break;
+  }
+  case 'import': {
+    const bundlePath = args[1];
+    if (!bundlePath) {
+      console.error('Usage: agent-migrate import <bundle-path>');
+      process.exit(ExitCodes.INVALID_ARGS);
+    }
+    executeImport(bundlePath, fmt).catch(err => {
       console.error('Error:', err.message);
       process.exit(ExitCodes.GENERAL_ERROR);
     });

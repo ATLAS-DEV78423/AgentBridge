@@ -9,6 +9,8 @@ describe('CLI', () => {
     expect(HELP_TEXT).toContain('plan');
     expect(HELP_TEXT).toContain('diff');
     expect(HELP_TEXT).toContain('doctor');
+    expect(HELP_TEXT).toContain('export');
+    expect(HELP_TEXT).toContain('import');
     expect(HELP_TEXT).toContain('--json');
   });
 

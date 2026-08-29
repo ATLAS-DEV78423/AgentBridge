@@ -9,6 +9,8 @@ Commands:
   plan <source> <target> [path]   Show migration compatibility report
   diff <source> <target> [path]   Show what files would change
   doctor [path] [--target <agent>] Validate environment and detect agents
+  export [agent] [path] [output]  Export agent config to portable bundle
+  import <bundle>                 Import and validate a bundle
   apply <plan>                    Apply a migration plan
   rollback <migration>            Rollback a migration
 
