@@ -18,9 +18,14 @@ export async function executeVerify(migrationDir: string, fmt: OutputFormat = 'h
 
   const files = manifest.files || [];
   if (files.length === 0) {
-    const entries = await fs.readdir(migrationDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isFile()) files.push({ path: path.join(migrationDir, entry.name) });
+    // No manifest — check only agent config files, not all files in directory
+    const agentFiles = ['AGENTS.md', 'CLAUDE.md', 'opencode.json', 'opencode.jsonc'];
+    for (const name of agentFiles) {
+      const filePath = path.join(migrationDir, name);
+      try {
+        await fs.access(filePath);
+        files.push({ path: name });
+      } catch { /* not found, skip */ }
     }
   }
 

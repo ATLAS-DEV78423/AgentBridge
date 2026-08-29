@@ -27,7 +27,7 @@ describe('capabilities', () => {
 describe('rules', () => {
   it('returns rules for migration path', () => {
     const rules = getRulesForMigration('claude-code', 'opencode');
-    expect(rules.length).toBe(7);
+    expect(rules.length).toBe(8);
   });
 
   it('finds specific rule', () => {

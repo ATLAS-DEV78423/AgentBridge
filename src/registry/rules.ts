@@ -10,6 +10,7 @@ const RULES: CompatibilityRule[] = [
   { id: 'claude-code-agents-opencode', sourceCapability: 'agents', targetCapability: 'agents', method: 'copy', status: MigrationStatus.DIRECT, confidence: 'medium' },
   { id: 'claude-code-permissions-opencode', sourceCapability: 'permissions', method: 'omit', status: MigrationStatus.UNSUPPORTED, confidence: 'high' },
   { id: 'claude-code-hooks-opencode', sourceCapability: 'hooks', method: 'omit', status: MigrationStatus.UNSUPPORTED, confidence: 'high' },
+  { id: 'claude-code-opaque-opencode', sourceCapability: 'opaque', targetCapability: 'opaque', method: 'rewrite', status: MigrationStatus.ADAPTED, confidence: 'medium' },
   // Claude → Kilo
   { id: 'claude-code-instructions-kilo', sourceCapability: 'instructions', targetCapability: 'instructions', method: 'copy', status: MigrationStatus.DIRECT, confidence: 'high' },
   { id: 'claude-code-skills-kilo', sourceCapability: 'skills', method: 'omit', status: MigrationStatus.UNSUPPORTED, confidence: 'high' },
@@ -18,6 +19,7 @@ const RULES: CompatibilityRule[] = [
   { id: 'claude-code-agents-kilo', sourceCapability: 'agents', method: 'omit', status: MigrationStatus.UNSUPPORTED, confidence: 'high' },
   { id: 'claude-code-permissions-kilo', sourceCapability: 'permissions', method: 'omit', status: MigrationStatus.UNSUPPORTED, confidence: 'high' },
   { id: 'claude-code-hooks-kilo', sourceCapability: 'hooks', method: 'omit', status: MigrationStatus.UNSUPPORTED, confidence: 'high' },
+  { id: 'claude-code-opaque-kilo', sourceCapability: 'opaque', targetCapability: 'opaque', method: 'rewrite', status: MigrationStatus.ADAPTED, confidence: 'medium' },
 ];
 
 export function getRulesForMigration(sourceAgent: string, targetAgent: string): CompatibilityRule[] {
