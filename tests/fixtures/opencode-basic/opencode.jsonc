@@ -1,0 +1,10 @@
+{
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-20250514",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  }
+}
