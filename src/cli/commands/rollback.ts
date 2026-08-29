@@ -1,4 +1,4 @@
-import { rollbackMigration, MigrationPlan } from '../../core/transaction/manager.js';
+import { rollbackTransaction, Transaction, TransactionOperation } from '../../core/transaction/transaction.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -12,30 +12,29 @@ export async function executeRollback(projectPath: string, migrationId: string):
     process.exit(1);
   }
 
-  // Reconstruct minimal plan for rollback
-  const plan: MigrationPlan = {
-    id: migrationId,
-    source: '',
-    target: '',
-    projectRoot: projectPath,
-    operations: [],
-    createdAt: ''
-  };
-
   // Read backed up files to determine operations
   const files = await readDirRecursive(backupBase);
+  const ops: TransactionOperation[] = [];
+
   for (const file of files) {
     const relativePath = path.relative(backupBase, file);
     const content = await fs.readFile(file, 'utf-8');
-    plan.operations.push({
-      id: '',
-      type: 'update',
+    ops.push({
+      id: `rollback-${relativePath}`,
+      type: 'modify',
       targetPath: relativePath,
       content
     });
   }
 
-  await rollbackMigration(plan, backupBase);
+  const tx: Transaction = {
+    id: migrationId,
+    operations: ops,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+
+  await rollbackTransaction(tx, projectPath);
   console.log(`\nMigration ${migrationId} rolled back.`);
   console.log('Source files restored.');
 }

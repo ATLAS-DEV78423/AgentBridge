@@ -1,5 +1,10 @@
 import { CanonicalResource } from '../../core/normalize/normalizer.js';
-import { TargetFile } from '../../core/translate/writer.js';
+
+type TargetFile = {
+  path: string;
+  content: string;
+  action: 'create' | 'update' | 'skip';
+};
 
 export function writeOpenCodeFiles(resources: CanonicalResource[], targetRoot: string): TargetFile[] {
   const files: TargetFile[] = [];

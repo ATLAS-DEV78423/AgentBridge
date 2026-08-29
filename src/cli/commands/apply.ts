@@ -4,9 +4,7 @@ import { kiloAdapter } from '../../adapters/kilo/index.js';
 import { AgentAdapter } from '../../core/scanner/scanner.js';
 import { normalizeBundle } from '../../core/normalize/normalizer.js';
 import { writeOpenCodeFiles } from '../../adapters/opencode/writer.js';
-import { createMigrationPlan, applyMigration } from '../../core/transaction/manager.js';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { createTransaction, applyTransaction } from '../../core/transaction/transaction.js';
 
 const adapters: Record<string, AgentAdapter> = {
   'claude-code': claudeAdapter,
@@ -32,15 +30,20 @@ export async function executeApply(source: string, target: string, projectPath: 
     process.exit(1);
   }
 
-  const plan = createMigrationPlan(source, target, projectPath, targetFiles);
-  const result = await applyMigration(plan);
+  const ops = targetFiles
+    .filter(f => f.action !== 'skip')
+    .map(f => ({
+      id: `op-${f.path}`,
+      type: f.action as 'create' | 'modify',
+      targetPath: f.path,
+      content: f.content
+    }));
 
-  console.log(`\nMigration ${result.id}\n`);
-  console.log(`${result.applied} operations applied.`);
-  console.log(`${result.skipped} operations skipped.`);
-  if (result.failed > 0) {
-    console.log(`${result.failed} operations failed.`);
-  }
-  console.log(`\nBackup: ${result.backupDir}`);
+  const tx = createTransaction(ops);
+  await applyTransaction(tx, projectPath);
+
+  console.log(`\nMigration ${tx.id}`);
+  console.log(`${ops.length} operations applied.`);
+  console.log(`Backup: .agentbridge/backups/${tx.id}`);
   console.log('\nMigration complete.');
 }

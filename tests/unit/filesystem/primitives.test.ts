@@ -7,7 +7,7 @@ import {
   backupFile,
   restoreBackup,
   safePath
-} from '../../../src/core/filesystem/index.js';
+} from '../../../src/core/filesystem/primitives.js';
 import { hashFile } from '../../../src/core/filesystem/hashing.js';
 
 describe('Filesystem Primitives', () => {
