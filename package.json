@@ -1,5 +1,5 @@
 {
-  "name": "agent-migrate",
+  "name": "@superdev2347832/agent-bridge",
   "version": "1.0.0",
   "description": "Safely migrate AI coding agent configuration between different agents",
   "type": "module",
@@ -44,6 +44,9 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/node": "^26.4.0",
     "tsx": "^4.23.12",
