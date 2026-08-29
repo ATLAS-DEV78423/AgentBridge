@@ -11,6 +11,7 @@ describe('CLI', () => {
     expect(HELP_TEXT).toContain('doctor');
     expect(HELP_TEXT).toContain('export');
     expect(HELP_TEXT).toContain('import');
+    expect(HELP_TEXT).toContain('verify');
     expect(HELP_TEXT).toContain('--json');
   });
 

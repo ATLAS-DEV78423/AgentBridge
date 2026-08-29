@@ -11,6 +11,7 @@ Commands:
   doctor [path] [--target <agent>] Validate environment and detect agents
   export [agent] [path] [output]  Export agent config to portable bundle
   import <bundle>                 Import and validate a bundle
+  verify [path]                   Verify migration results
   apply <plan>                    Apply a migration plan
   rollback <migration>            Rollback a migration
 

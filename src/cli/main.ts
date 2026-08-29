@@ -7,6 +7,7 @@ import { executeDiff } from './commands/diff.js';
 import { executeDoctor } from './commands/doctor.js';
 import { executeExport } from './commands/export.js';
 import { executeImport } from './commands/import-bundle.js';
+import { executeVerify } from './commands/verify.js';
 import { setOutputFormat, OutputFormat } from './output/formatter.js';
 import { ExitCodes } from './output/exit-codes.js';
 
@@ -91,6 +92,14 @@ switch (command) {
       process.exit(ExitCodes.INVALID_ARGS);
     }
     executeImport(bundlePath, fmt).catch(err => {
+      console.error('Error:', err.message);
+      process.exit(ExitCodes.GENERAL_ERROR);
+    });
+    break;
+  }
+  case 'verify': {
+    const path = args[1] || '.';
+    executeVerify(path, fmt).catch(err => {
       console.error('Error:', err.message);
       process.exit(ExitCodes.GENERAL_ERROR);
     });
