@@ -1,22 +1,13 @@
 # AgentBridge
 
-> Safely migrate your AI coding agent configuration between different agents.
+> Migrate your AI coding agent configuration between Claude Code, OpenCode, and Kilo Code.
 
-A local-first CLI tool that discovers, normalizes, compares, and migrates coding agent environments (Claude Code ↔ OpenCode ↔ Kilo Code) with full transparency and rollback support.
-
-## Features
-
-- **Multi-agent support**: Claude Code, OpenCode, Kilo Code
-- **Safe migration**: Backup before overwrite, atomic writes, full rollback
-- **Transparent**: Every change is explainable with clear status indicators
-- **Portable bundles**: Export/import agent configs across machines
-- **JSON output**: Machine-readable output for automation
-- **Zero dependencies**: Only uses Node.js built-in modules
+A local-first CLI tool that discovers, compares, and migrates coding agent environments with backup and rollback.
 
 ## Installation
 
 ```bash
-# From npm (when published)
+# From npm
 npm install -g agent-migrate
 
 # From source
@@ -26,58 +17,35 @@ npm install
 npm link
 ```
 
+Requires Node.js >= 22.
+
 ## Quick Start
 
 ```bash
-# Scan your project for agent configs
+# See what's in your project
 agent-migrate scan
 
-# See what would change when migrating to OpenCode
+# Preview a migration
 agent-migrate plan claude-code opencode
 
-# Preview the file changes
-agent-migrate diff claude-code opencode
+# Do it
+agent-migrate migrate claude-code opencode
 
-# Validate your environment
-agent-migrate doctor
+# Undo if needed
+agent-migrate rollback . <migration-id>
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `scan [path]` | Scan directory for agent configurations |
-| `plan <source> <target> [path]` | Show migration compatibility report |
+| `scan [path]` | Detect which agent configs exist |
+| `plan <source> <target> [path]` | Show what maps to what |
 | `diff <source> <target> [path]` | Preview file changes |
-| `doctor [path]` | Validate environment and detect agents |
-| `export [agent] [path] [output]` | Export config to portable bundle |
-| `import <bundle>` | Import and validate a bundle |
-| `verify [path]` | Verify migration results |
-
-All commands support `--json` for structured output.
-
-## Migration Status Types
-
-| Status | Meaning |
-|--------|---------|
-| `EXACT` | Equivalent representation, no semantic change |
-| `DIRECT` | Direct target-supported representation |
-| `ADAPTED` | Transformed with known differences |
-| `PARTIAL` | Some resources can migrate, some cannot |
-| `UNSUPPORTED` | No safe target representation exists |
-| `BLOCKED` | Migration cannot proceed safely |
-
-## Architecture
-
-```
-Scanner → Source Model → Normalizer → Canonical Model
-    ↓
-Capability Registry → Compatibility Rules
-    ↓
-Migration Planner → Target Writer → Transaction Engine
-    ↓
-Backup → Atomic Write → Verify → Rollback (if needed)
-```
+| `migrate <source> <target> [path]` | Scan + write in one step |
+| `apply <source> <target> [path]` | Same as migrate (alias) |
+| `apply ... --dry-run` | Preview without writing |
+| `rollback <path> <migration-id>` | Restore from backup |
 
 ## Supported Migrations
 
@@ -85,20 +53,22 @@ Backup → Atomic Write → Verify → Rollback (if needed)
 |--------|--------|--------|
 | Claude Code | OpenCode | ✅ Supported |
 | Claude Code | Kilo Code | ✅ Supported |
-| OpenCode | Claude Code | 🔜 Planned |
-| Kilo Code | Claude Code | 🔜 Planned |
+
+## How It Works
+
+1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.jsonc`, `.kilo/` etc.
+2. **Plan** — maps each resource via compatibility rules (DIRECT / ADAPTED / UNSUPPORTED)
+3. **Migrate** — writes target files, backs up originals
+4. **Rollback** — restores everything from backup
+
+MCP server configs are translated between formats (e.g. Claude's implicit stdio → OpenCode's explicit `type: "stdio"`).
 
 ## Development
 
 ```bash
-# Run tests
-npm test
-
-# Type check
-npm run typecheck
-
-# Run in development
-npx tsx src/cli/main.ts --help
+npm test          # run tests
+npm run typecheck # type check
+npm run build     # compile to dist/
 ```
 
 ## License
