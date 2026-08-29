@@ -4,16 +4,20 @@ agent-migrate - Cross-agent migration tool
 Usage:
   agent-migrate <command> [options]
 
+Quick start:
+  agent-migrate migrate claude-code opencode    One-step migration
+
 Commands:
-  scan [path]                     Scan current directory for agent configs
+  scan [path]                     Scan directory for agent configs
   plan <source> <target> [path]   Show migration compatibility report
-  diff <source> <target> [path]   Show what files would change
-  doctor [path] [--target <agent>] Validate environment and detect agents
-  export [agent] [path] [output]  Export agent config to portable bundle
+  diff <source> <target> [path]   Preview file changes
+  doctor [path] [--target <agent>] Validate environment
+  export [agent] [path] [output]  Export config to portable bundle
   import <bundle>                 Import and validate a bundle
+  migrate <source> <target> [path] Scan → plan → apply in one step
+  apply <source> <target> [path]  Apply a migration
+  rollback <path> <migration-id>  Rollback a migration
   verify [path]                   Verify migration results
-  apply <plan>                    Apply a migration plan
-  rollback <migration>            Rollback a migration
 
 Options:
   --help, -h                      Show this help message

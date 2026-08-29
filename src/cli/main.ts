@@ -8,11 +8,13 @@ import { executeDoctor } from './commands/doctor.js';
 import { executeExport } from './commands/export.js';
 import { executeImport } from './commands/import-bundle.js';
 import { executeVerify } from './commands/verify.js';
+import { executeApply } from './commands/apply.js';
+import { executeRollback } from './commands/rollback.js';
+import { executeMigrate } from './commands/migrate.js';
 import { setOutputFormat, OutputFormat } from './output/formatter.js';
 
 const args = process.argv.slice(2);
 
-// Parse --json flag
 const jsonIndex = args.indexOf('--json');
 const jsonMode = jsonIndex !== -1;
 if (jsonMode) {
@@ -31,83 +33,60 @@ const fmt: OutputFormat = jsonMode ? 'json' : 'human';
 switch (command) {
   case 'scan': {
     const path = args[1] || '.';
-    executeScan(path).catch(err => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
+    executeScan(path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'plan': {
-    const source = args[1];
-    const target = args[2];
-    const path = args[3] || '.';
-    if (!source || !target) {
-      console.error('Usage: agent-migrate plan <source> <target> [path]');
-      process.exit(2);
-    }
-    executePlan(source, target, path).catch(err => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
+    const source = args[1], target = args[2], path = args[3] || '.';
+    if (!source || !target) { console.error('Usage: agent-migrate plan <source> <target> [path]'); process.exit(2); }
+    executePlan(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'diff': {
-    const source = args[1];
-    const target = args[2];
-    const path = args[3] || '.';
-    if (!source || !target) {
-      console.error('Usage: agent-migrate diff <source> <target> [path]');
-      process.exit(2);
-    }
-    executeDiff(source, target, path).catch(err => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
+    const source = args[1], target = args[2], path = args[3] || '.';
+    if (!source || !target) { console.error('Usage: agent-migrate diff <source> <target> [path]'); process.exit(2); }
+    executeDiff(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'doctor': {
-    const path = args[1] || '.';
-    const target = args[2];
-    executeDoctor(path, target, fmt).catch(err => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
+    const path = args[1] || '.', target = args[2];
+    executeDoctor(path, target, fmt).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'export': {
-    const agent = args[1];
-    const path = args[2] || '.';
-    const output = args[3] || './agent-bundle.json';
-    executeExport(agent, path, output, fmt).catch(err => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
+    const agent = args[1], path = args[2] || '.', output = args[3] || './agent-bundle.json';
+    executeExport(agent, path, output, fmt).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'import': {
     const bundlePath = args[1];
-    if (!bundlePath) {
-      console.error('Usage: agent-migrate import <bundle-path>');
-      process.exit(2);
-    }
-    executeImport(bundlePath, fmt).catch(err => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
+    if (!bundlePath) { console.error('Usage: agent-migrate import <bundle-path>'); process.exit(2); }
+    executeImport(bundlePath, fmt).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'verify': {
     const path = args[1] || '.';
-    executeVerify(path, fmt).catch(err => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
+    executeVerify(path, fmt).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
-  case 'apply':
-  case 'rollback':
-    console.log(`Command "${command}" not yet implemented.`);
-    process.exit(1);
+  case 'apply': {
+    const source = args[1], target = args[2], path = args[3] || '.';
+    if (!source || !target) { console.error('Usage: agent-migrate apply <source> <target> [path]'); process.exit(2); }
+    executeApply(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    break;
+  }
+  case 'rollback': {
+    const path = args[1] || '.', migrationId = args[2];
+    if (!migrationId) { console.error('Usage: agent-migrate rollback <path> <migration-id>'); process.exit(2); }
+    executeRollback(path, migrationId).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    break;
+  }
+  case 'migrate': {
+    const source = args[1], target = args[2], path = args[3] || '.';
+    if (!source || !target) { console.error('Usage: agent-migrate migrate <source> <target> [path]'); process.exit(2); }
+    executeMigrate(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    break;
+  }
   default:
     console.error(`Unknown command: ${command}`);
     console.log('Run "agent-migrate --help" for usage.');
