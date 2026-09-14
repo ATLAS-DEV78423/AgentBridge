@@ -18,6 +18,7 @@ Supported agents:
   claude-code                     Claude Code (source & target)
   opencode                        OpenCode (source & target)
   kilo                            Kilo Code (source & target)
+  cursor                          Cursor (source & target)
 `;
 
 export function showHelp(): void {

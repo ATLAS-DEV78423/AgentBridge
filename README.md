@@ -60,10 +60,16 @@ agent-migrate migrate opencode claude-code
 | OpenCode | Kilo Code | ✅ Supported |
 | Kilo Code | Claude Code | ✅ Supported |
 | Kilo Code | OpenCode | ✅ Supported |
+| Cursor | Claude Code | ✅ Supported |
+| Cursor | OpenCode | ✅ Supported |
+| Cursor | Kilo Code | ✅ Supported |
+| Claude Code | Cursor | ✅ Supported |
+| OpenCode | Cursor | ✅ Supported |
+| Kilo Code | Cursor | ✅ Supported |
 
 ## How It Works
 
-1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.jsonc`, `.kilo/` etc.
+1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.jsonc`, `.kilo/`, `.cursor/` etc.
 2. **Plan** — maps each resource via compatibility rules (DIRECT / ADAPTED / UNSUPPORTED)
 3. **Migrate** — writes target files, backs up originals
 4. **Rollback** — restores everything from backup

@@ -80,4 +80,35 @@ describe('migratePipeline directions', () => {
     const oc = JSON.parse(await fs.readFile(path.join(dir, 'opencode.json'), 'utf-8'));
     expect(oc.model).toBe('claude-sonnet-4-20250514');
   });
+
+  it('migrates cursor → claude-code (reverse, mcp translation)', async () => {
+    const dir = await copyFixture('cursor-basic');
+    const { txId } = await migratePipeline('cursor', 'claude-code', dir);
+    expect(txId).toBeTruthy();
+    const settings = JSON.parse(await fs.readFile(path.join(dir, '.claude', 'settings.json'), 'utf-8'));
+    expect(settings.mcpServers.filesystem).toEqual({
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    });
+  });
+
+  it('migrates claude-code → cursor (instructions only; no mcp file without servers)', async () => {
+    const dir = await copyFixture('claude-basic');
+    const { txId } = await migratePipeline('claude-code', 'cursor', dir);
+    expect(txId).toBeTruthy();
+    await fs.access(path.join(dir, 'AGENTS.md'));
+    await expect(fs.access(path.join(dir, '.cursor', 'mcp.json'))).rejects.toThrow();
+  });
+
+  it('migrates opencode → cursor (mcp translation with stdio type added)', async () => {
+    const dir = await copyFixture('opencode-basic');
+    const { txId } = await migratePipeline('opencode', 'cursor', dir);
+    expect(txId).toBeTruthy();
+    const cursor = JSON.parse(await fs.readFile(path.join(dir, '.cursor', 'mcp.json'), 'utf-8'));
+    expect(cursor.mcpServers.filesystem).toEqual({
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    });
+  });
 });

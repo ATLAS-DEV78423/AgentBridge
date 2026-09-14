@@ -13,7 +13,28 @@ describe('Compatibility Rules', () => {
     expect(rules).toEqual([]);
   });
 
-  const AGENTS = ['claude-code', 'opencode', 'kilo'];
+  const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor'];
+
+  it('marks opaque ADAPTED only for targets that map opaque fields', () => {
+    expect(getRulesForMigration('claude-code', 'opencode').find(r => r.sourceCapability === 'opaque')?.status).toBe('ADAPTED');
+    expect(getRulesForMigration('opencode', 'claude-code').find(r => r.sourceCapability === 'opaque')?.status).toBe('ADAPTED');
+    expect(getRulesForMigration('claude-code', 'kilo').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
+    expect(getRulesForMigration('opencode', 'kilo').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
+    expect(getRulesForMigration('claude-code', 'cursor').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
+    expect(getRulesForMigration('kilo', 'cursor').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
+  });
+
+  it('returns rules for claude-code-to-cursor with mcp translation', () => {
+    const rules = getRulesForMigration('claude-code', 'cursor');
+    expect(rules.length).toBe(3);
+    expect(rules.find(r => r.sourceCapability === 'mcpServers')?.status).toBe('ADAPTED');
+  });
+
+  it('returns rules for cursor-to-claude-code (reverse)', () => {
+    const rules = getRulesForMigration('cursor', 'claude-code');
+    expect(rules.length).toBe(3);
+    expect(rules.some(r => r.sourceCapability === 'instructions')).toBe(true);
+  });
 
   it('returns rules for opencode-to-claude-code', () => {
     const rules = getRulesForMigration('opencode', 'claude-code');
