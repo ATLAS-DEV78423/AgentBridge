@@ -147,4 +147,37 @@ describe('migratePipeline directions', () => {
       args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
     });
   });
+
+  it('migrates a commented kilo.jsonc with mcp servers to claude-code', async () => {
+    const dir = await copyFixture('kilo-basic');
+    await fs.writeFile(path.join(dir, '.kilo', 'kilo.jsonc'), `{
+      // main config
+      "model": "claude-sonnet-4-20250514",
+      "mcp": {
+        "fs": { "type": "local", "command": ["npx", "-y", "fs"], "environment": { "K": "v" } },
+      },
+    }`);
+    const { txId } = await migratePipeline('kilo', 'claude-code', dir);
+    expect(txId).toBeTruthy();
+    const settings = JSON.parse(await fs.readFile(path.join(dir, '.claude', 'settings.json'), 'utf-8'));
+    expect(settings.model).toBe('claude-sonnet-4-20250514');
+    expect(settings.mcpServers.fs).toEqual({ command: 'npx', args: ['-y', 'fs'], env: { K: 'v' } });
+  });
+
+  it('migrates a commented opencode.jsonc to gemini end-to-end', async () => {
+    const dir = await copyFixture('opencode-basic');
+    await fs.writeFile(path.join(dir, 'opencode.jsonc'), `{
+      // provider
+      "provider": "anthropic",
+      "model": "gemini-2.5-pro",
+      "mcpServers": {
+        "fs": { "type": "stdio", "command": "npx", "args": ["-y", "fs"], },
+      },
+    }`);
+    const { txId } = await migratePipeline('opencode', 'gemini', dir);
+    expect(txId).toBeTruthy();
+    const gemini = JSON.parse(await fs.readFile(path.join(dir, '.gemini', 'settings.json'), 'utf-8'));
+    expect(gemini.mcpServers.fs).toEqual({ command: 'npx', args: ['-y', 'fs'] });
+    expect(gemini.mcpServers.fs.type).toBeUndefined();
+  });
 });

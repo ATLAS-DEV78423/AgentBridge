@@ -36,4 +36,24 @@ describe('Kilo scanner', () => {
     expect(bundle.opaque[0].name).toBe('.kilo/kilo.jsonc');
     await fs.rm(dir, { recursive: true, force: true });
   });
+
+  it('extracts mcp servers from a commented .kilo/kilo.jsonc', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'kilo-mcp-'));
+    await fs.mkdir(path.join(dir, '.kilo'), { recursive: true });
+    await fs.writeFile(path.join(dir, '.kilo', 'kilo.jsonc'), `{
+      // local tools
+      "model": "m",
+      "mcp": {
+        "fs": { "type": "local", "command": ["npx", "-y", "fs"], }, // remote
+        "web": { "type": "remote", "url": "https://mcp.example.com/mcp" },
+      },
+    }`);
+    const bundle = await scanKiloProject({ root: dir });
+    expect(bundle.mcpServers.length).toBe(2);
+    const byName = Object.fromEntries(bundle.mcpServers.map(s => [s.name, JSON.parse(s.content!)]));
+    // normalized to canonical command/args/env + url shape
+    expect(byName.fs).toEqual({ command: 'npx', args: ['-y', 'fs'] });
+    expect(byName.web).toEqual({ url: 'https://mcp.example.com/mcp' });
+    await fs.rm(dir, { recursive: true, force: true });
+  });
 });
