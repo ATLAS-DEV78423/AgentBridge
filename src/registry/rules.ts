@@ -10,10 +10,10 @@ const CAPABILITIES: { capability: string; method: 'copy' | 'rewrite'; status: Mi
 ];
 
 // Targets whose writer maps fields out of the source's opaque config
-// (model/permissions). Writers without such mappings must see opaque
-// marked UNSUPPORTED so plan/diff don't promise an adaptation that
-// never happens.
-const OPAQUE_TARGETS = new Set<string>(['claude-code', 'opencode']);
+// (model/permissions/maxTokens). Writers without such mappings must see
+// opaque marked UNSUPPORTED so plan/diff don't promise an adaptation
+// that never happens.
+const OPAQUE_TARGETS = new Set<string>(['claude-code', 'opencode', 'kilo']);
 
 const RULES: CompatibilityRule[] = AGENTS.flatMap(source =>
   AGENTS

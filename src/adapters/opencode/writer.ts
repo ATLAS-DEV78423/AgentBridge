@@ -60,7 +60,9 @@ export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
   // Second pass: write instruction files
   for (const r of resources) {
     if (r.type === 'instructions') {
-      files.push({ path: r.name, content: r.content || '', action: 'create' });
+      // GEMINI.md is Gemini-only; other agents read AGENTS.md.
+      const targetPath = r.name === 'GEMINI.md' ? 'AGENTS.md' : r.name;
+      files.push({ path: targetPath, content: r.content || '', action: 'create' });
     }
   }
 

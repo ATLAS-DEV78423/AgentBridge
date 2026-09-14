@@ -15,6 +15,11 @@ describe('writeOpenCodeFiles', () => {
       .toEqual([{ path: 'AGENTS.md', content: '# Rules', action: 'create' }]);
   });
 
+  it('normalizes GEMINI.md instructions to AGENTS.md', () => {
+    const files = writeOpenCodeFiles([inst('GEMINI.md', '# Rules')]);
+    expect(files[0].path).toBe('AGENTS.md');
+  });
+
   it('builds opencode.json from claude settings', () => {
     const files = writeOpenCodeFiles([
       opaque('.claude/settings.json', JSON.stringify({ model: 'm', permissions: { allow: ['read'] } })),

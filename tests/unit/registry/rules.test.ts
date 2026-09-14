@@ -32,8 +32,8 @@ describe('Compatibility Rules', () => {
   it('marks opaque ADAPTED only for targets that map opaque fields', () => {
     expect(getRulesForMigration('claude-code', 'opencode').find(r => r.sourceCapability === 'opaque')?.status).toBe('ADAPTED');
     expect(getRulesForMigration('opencode', 'claude-code').find(r => r.sourceCapability === 'opaque')?.status).toBe('ADAPTED');
-    expect(getRulesForMigration('claude-code', 'kilo').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
-    expect(getRulesForMigration('opencode', 'kilo').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
+    expect(getRulesForMigration('claude-code', 'kilo').find(r => r.sourceCapability === 'opaque')?.status).toBe('ADAPTED');
+    expect(getRulesForMigration('opencode', 'kilo').find(r => r.sourceCapability === 'opaque')?.status).toBe('ADAPTED');
     expect(getRulesForMigration('claude-code', 'cursor').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
     expect(getRulesForMigration('kilo', 'cursor').find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
   });

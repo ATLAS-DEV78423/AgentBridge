@@ -18,6 +18,10 @@ describe('writeCursorFiles', () => {
       .toEqual([{ path: 'AGENTS.md', content: '# Rules', action: 'create' }]);
   });
 
+  it('normalizes GEMINI.md instructions to AGENTS.md', () => {
+    expect(writeCursorFiles([inst('GEMINI.md', '# Rules')])[0].path).toBe('AGENTS.md');
+  });
+
   it('translates claude stdio server to cursor format (adds type: stdio)', () => {
     const files = writeCursorFiles([
       mcp('fs', { command: 'npx', args: ['-y', 'mcp-fs'], env: { FOO: '1' } }),

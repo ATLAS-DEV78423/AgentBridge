@@ -87,6 +87,38 @@ agent-migrate migrate-all claude-code .
 
 MCP server configs are translated between formats (e.g. Claude's implicit stdio → OpenCode's explicit `type: "stdio"`).
 
+## What migrates (per pair)
+
+What each direction carries, computed from the writers' actual behavior:
+
+| Direction | Instructions | MCP servers | Model settings |
+|---|---|---|---|
+| claude-code → opencode | ✓ | ✓ | ✓ |
+| claude-code → kilo | ✓ | ✓ | ✓ |
+| claude-code → cursor | ✓ | ✓ | ✗ |
+| claude-code → gemini | ✓ | ✓ | ✗ |
+| opencode → claude-code | ✓ | ✓ | ✓ |
+| opencode → kilo | ✓ | ✓ | ✓ |
+| opencode → cursor | ✓ | ✓ | ✗ |
+| opencode → gemini | ✓ | ✓ | ✗ |
+| kilo → claude-code | ✓ | ✓ | ✓ |
+| kilo → opencode | ✓ | ✓ | ✓ |
+| kilo → cursor | ✓ | ✓ | ✗ |
+| kilo → gemini | ✓ | ✓ | ✗ |
+| cursor → claude-code | ✓ | ✓ | ✗ |
+| cursor → opencode | ✓ | ✓ | ✗ |
+| cursor → kilo | ✓ | ✓ | ✗ |
+| cursor → gemini | ✓ | ✓ | ✗ |
+| gemini → claude-code | ✓ | ✓ | ✗ |
+| gemini → opencode | ✓ | ✓ | ✗ |
+| gemini → kilo | ✓ | ✓ | ✗ |
+| gemini → cursor | ✓ | ✓ | ✗ |
+
+Notes:
+- **Instructions** land at the target's own filename — `AGENTS.md` everywhere except Gemini CLI, which reads `GEMINI.md`.
+- **MCP servers** are translated to each target's format (stdio vs local vs inferred transport; Claude gets the explicit `type` stripped, Cursor gets it added).
+- **Model settings** mean `model` (plus `permissions` for OpenCode targets, `maxTokens` for Kilo). Cursor and Gemini store no equivalent settings fields, so those columns are ✗ by design — their configs are MCP-only.
+
 ## Development
 
 ```bash

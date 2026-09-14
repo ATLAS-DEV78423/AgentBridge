@@ -17,7 +17,9 @@ export function writeCursorFiles(resources: ResourceBase[]): TargetFile[] {
 
   for (const r of resources) {
     if (r.type === 'instructions' && r.content) {
-      files.push({ path: r.name, content: r.content, action: 'create' });
+      // GEMINI.md is Gemini-only; other agents read AGENTS.md.
+      const targetPath = r.name === 'GEMINI.md' ? 'AGENTS.md' : r.name;
+      files.push({ path: targetPath, content: r.content, action: 'create' });
     } else if (r.type === 'mcpServers' && r.content) {
       try {
         mcpServers[r.name] = translateMcpServer(JSON.parse(r.content));

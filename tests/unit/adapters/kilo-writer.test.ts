@@ -22,6 +22,10 @@ describe('writeKiloFiles', () => {
     expect(writeKiloFiles([inst('CLAUDE.md', '# Claude')])[0].path).toBe('CLAUDE.md');
   });
 
+  it('normalizes GEMINI.md instructions to AGENTS.md', () => {
+    expect(writeKiloFiles([inst('GEMINI.md', '# Rules')])[0].path).toBe('AGENTS.md');
+  });
+
   it('maps claude settings into .kilo/kilo.jsonc, dropping claude-only fields', () => {
     const files = writeKiloFiles([
       opaque('.claude/settings.json', JSON.stringify({
