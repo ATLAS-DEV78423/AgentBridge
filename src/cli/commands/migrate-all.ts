@@ -1,4 +1,5 @@
 import { adapters } from '../../adapters/registry.js';
+import { hasWriter } from '../../core/writers.js';
 import { migratePipeline } from '../../core/pipeline.js';
 
 export type MigrateAllResult = Record<string, { txId: string | null; fileCount: number }>;
@@ -21,6 +22,16 @@ export async function executeMigrateAll(
       return detection.detected ? id : null;
     }),
   )).filter((id): id is string => id !== null);
+
+  // Pre-flight: refuse to start unless every detected target can be written,
+  // so a partial migration never happens because of a missing writer.
+  const missing = targets.filter(t => !hasWriter(t));
+  if (missing.length > 0) {
+    throw new Error(
+      `No target writer for: ${missing.join(', ')}. ` +
+      `Aborting before touching any files (nothing was migrated).`,
+    );
+  }
 
   console.log(`\nSyncing: ${source} → ${targets.length ? targets.join(', ') : '(no other agents detected)'}`);
 

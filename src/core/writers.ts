@@ -17,3 +17,7 @@ export function registerWriter(target: string, writeFn: WriteFn): void {
 export function getWriter(target: string): WriteFn | undefined {
   return writers[target];
 }
+
+export function hasWriter(target: string): boolean {
+  return target in writers;
+}
