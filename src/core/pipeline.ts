@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { adapters } from '../adapters/registry.js';
 import { AgentBundle, ResourceBase } from './model/types.js';
 import { evaluateCompatibility, CompatibilityResult } from './compatibility/engine.js';
@@ -14,6 +16,30 @@ export function flattenBundle(bundle: AgentBundle): ResourceBase[] {
     }
   }
   return resources;
+}
+
+/**
+ * Deep-merge two JSON objects (incoming values win on conflict, arrays
+ * replace wholesale). Used when a migration overwrites an existing
+ * target config, so user-added keys survive instead of being clobbered.
+ */
+export function deepMergeJson(
+  existing: Record<string, unknown>,
+  incoming: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...existing };
+  for (const [key, value] of Object.entries(incoming)) {
+    const current = result[key];
+    if (
+      value && typeof value === 'object' && !Array.isArray(value) &&
+      current && typeof current === 'object' && !Array.isArray(current)
+    ) {
+      result[key] = deepMergeJson(current as Record<string, unknown>, value as Record<string, unknown>);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
 }
 
 export type PlanResult = {
@@ -51,12 +77,25 @@ export async function migratePipeline(
   if (plan.length > supported.length) console.log(`  Unsupported: ${plan.length - supported.length} resources`);
 
   const targetFiles = writeFn(resources);
-  const ops: TransactionOperation[] = targetFiles
-    .map(f => ({
-      type: 'create' as const,
-      targetPath: f.path,
-      content: f.content
-    }));
+  const ops: TransactionOperation[] = [];
+  for (const f of targetFiles) {
+    let content = f.content;
+    const fullPath = path.join(projectPath, f.path);
+    // Merge into existing JSON configs so user-added keys survive;
+    // markdown and non-JSON files replace wholesale as before.
+    try {
+      const existingRaw = await fs.readFile(fullPath, 'utf-8');
+      const existing = JSON.parse(existingRaw);
+      const incoming = JSON.parse(content);
+      if (
+        existing && typeof existing === 'object' && !Array.isArray(existing) &&
+        incoming && typeof incoming === 'object' && !Array.isArray(incoming)
+      ) {
+        content = JSON.stringify(deepMergeJson(existing, incoming), null, 2);
+      }
+    } catch { /* no existing file, or either side isn't JSON — replace */ }
+    ops.push({ type: 'create' as const, targetPath: f.path, content });
+  }
 
   if (ops.length === 0) {
     console.log('\nNo files to write.');

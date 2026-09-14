@@ -180,4 +180,47 @@ describe('migratePipeline directions', () => {
     expect(gemini.mcpServers.fs).toEqual({ command: 'npx', args: ['-y', 'fs'] });
     expect(gemini.mcpServers.fs.type).toBeUndefined();
   });
+
+  it('merges into an existing target config, preserving user-only keys', async () => {
+    const dir = await copyFixture('claude-basic');
+    // Give the source an MCP server to migrate
+    await fs.writeFile(path.join(dir, '.claude', 'settings.json'), JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      mcpServers: { filesystem: { command: 'npx', args: ['-y', 'fs-mcp'] } },
+    }));
+    // User's hand-edited opencode config that the migration will overwrite
+    await fs.writeFile(path.join(dir, 'opencode.json'), JSON.stringify({
+      theme: 'user-dark',
+      model: 'user-custom-model',
+      mcpServers: { userSrv: { type: 'stdio', command: 'user-cmd' } },
+    }));
+
+    const { txId } = await migratePipeline('claude-code', 'opencode', dir);
+    expect(txId).toBeTruthy();
+
+    const oc = JSON.parse(await fs.readFile(path.join(dir, 'opencode.json'), 'utf-8'));
+    // user-only keys preserved
+    expect(oc.theme).toBe('user-dark');
+    expect(oc.mcpServers.userSrv).toEqual({ type: 'stdio', command: 'user-cmd' });
+    // incoming values win on conflict
+    expect(oc.model).toBe('claude-sonnet-4-20250514');
+    expect(oc.mcpServers.filesystem).toEqual({
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', 'fs-mcp'],
+    });
+  });
+
+  it('leaves markdown instructions as full replacement (no merge)', async () => {
+    const dir = await copyFixture('claude-basic');
+    // A stale GEMINI.md from a previous migration or hand-editing
+    await fs.writeFile(path.join(dir, 'GEMINI.md'), '# Old user instructions');
+
+    await migratePipeline('claude-code', 'gemini', dir);
+
+    // GEMINI.md gets the migrated instructions wholesale
+    const md = await fs.readFile(path.join(dir, 'GEMINI.md'), 'utf-8');
+    expect(md).not.toContain('Old user instructions');
+    expect(md.length).toBeGreaterThan(0);
+  });
 });
