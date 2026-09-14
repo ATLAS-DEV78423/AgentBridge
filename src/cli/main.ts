@@ -7,6 +7,7 @@ import { executePlan } from './commands/plan.js';
 import { executeDiff } from './commands/diff.js';
 import { executeRollback } from './commands/rollback.js';
 import { executeMigrate } from './commands/migrate.js';
+import { executeMigrateAll } from './commands/migrate-all.js';
 
 const args = process.argv.slice(2);
 
@@ -55,6 +56,13 @@ switch (command) {
     const source = args[1], target = args[2], path = args[3] || '.';
     if (!source || !target) { console.error('Usage: agent-migrate migrate <source> <target> [path]'); process.exit(2); }
     executeMigrate(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    break;
+  }
+  case 'migrate-all': {
+    const source = args[1], path = args[2] || '.';
+    const dryRun = args.includes('--dry-run');
+    if (!source) { console.error('Usage: agent-migrate migrate-all <source> [path] [--dry-run]'); process.exit(2); }
+    executeMigrateAll(source, path, dryRun).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   default:

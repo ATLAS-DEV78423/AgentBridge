@@ -10,6 +10,7 @@ Commands:
   plan <source> <target> [path]   Show migration compatibility report
   diff <source> <target> [path]   Preview file changes
   migrate <source> <target> [path] Scan → plan → apply in one step
+  migrate-all <source> [path]     Sync source config to every other detected agent
   apply <source> <target> [path]  Apply a migration
   apply <source> <target> [path] --dry-run  Preview without writing
   rollback <path> <migration-id>  Rollback a migration

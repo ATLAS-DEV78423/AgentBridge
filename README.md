@@ -36,6 +36,9 @@ agent-migrate rollback . <migration-id>
 
 # Any direction works — e.g. back to Claude Code
 agent-migrate migrate opencode claude-code
+
+# Or sync one agent's config to every other agent in the project
+agent-migrate migrate-all claude-code .
 ```
 
 ## Commands
