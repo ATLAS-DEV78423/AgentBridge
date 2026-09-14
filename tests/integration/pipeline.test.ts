@@ -35,7 +35,7 @@ describe('migratePipeline directions', () => {
     const dir = await copyFixture('claude-basic');
     const { txId } = await migratePipeline('claude-code', 'kilo', dir);
     expect(txId).toBeTruthy();
-    const kilo = JSON.parse(await fs.readFile(path.join(dir, '.kilo', 'config.json'), 'utf-8'));
+    const kilo = JSON.parse(await fs.readFile(path.join(dir, '.kilo', 'kilo.jsonc'), 'utf-8'));
     expect(kilo.model).toBe('claude-sonnet-4-20250514');
   });
 
@@ -61,15 +61,23 @@ describe('migratePipeline directions', () => {
     expect(settings.systemPrompt).toBeUndefined();
   });
 
-  it('opencode → kilo works', async () => {
+  it('opencode → kilo works, translating mcpServers to kilo local format', async () => {
     const dir = await copyFixture('opencode-basic');
     const { txId } = await migratePipeline('opencode', 'kilo', dir);
     expect(txId).toBeTruthy();
+    const kilo = JSON.parse(await fs.readFile(path.join(dir, '.kilo', 'kilo.jsonc'), 'utf-8'));
+    expect(kilo.model).toBe('claude-sonnet-4-20250514');
+    expect(kilo.mcp.filesystem).toEqual({
+      type: 'local',
+      command: ['npx', '-y', '@modelcontextprotocol/server-filesystem', '.'],
+    });
   });
 
   it('kilo → opencode works', async () => {
     const dir = await copyFixture('kilo-basic');
     const { txId } = await migratePipeline('kilo', 'opencode', dir);
     expect(txId).toBeTruthy();
+    const oc = JSON.parse(await fs.readFile(path.join(dir, 'opencode.json'), 'utf-8'));
+    expect(oc.model).toBe('claude-sonnet-4-20250514');
   });
 });

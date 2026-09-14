@@ -23,12 +23,16 @@ export async function scanKiloProject(ctx: { root: string }): Promise<AgentBundl
     } catch { /* skip */ }
   }
 
-  // Scan for .kilo/config.json
-  const configPath = path.join(ctx.root, '.kilo', 'config.json');
-  try {
-    const content = await fs.readFile(configPath, 'utf-8');
-    bundle.opaque.push(createResource('opaque', '.kilo/config.json', configPath, ctx.root, content));
-  } catch { /* config doesn't exist */ }
+  // Scan for kilo config — .kilo/kilo.jsonc is the documented location,
+  // .kilo/config.json kept as legacy fallback.
+  for (const rel of ['.kilo/kilo.jsonc', '.kilo/config.json']) {
+    const configPath = path.join(ctx.root, rel);
+    try {
+      const content = await fs.readFile(configPath, 'utf-8');
+      bundle.opaque.push(createResource('opaque', rel, configPath, ctx.root, content));
+      break;
+    } catch { /* this config doesn't exist */ }
+  }
 
   return bundle;
 }

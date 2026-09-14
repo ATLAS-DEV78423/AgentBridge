@@ -3,11 +3,11 @@ import path from 'node:path';
 import { DetectionResult } from '../../core/scanner/scanner.js';
 
 export async function detectKilo(ctx: { root: string }): Promise<DetectionResult> {
-  try {
-    const configPath = path.join(ctx.root, '.kilo', 'config.json');
-    await fs.access(configPath);
-    return { detected: true, agent: 'kilo' };
-  } catch {
-    return { detected: false };
+  for (const rel of ['.kilo/kilo.jsonc', '.kilo/config.json']) {
+    try {
+      await fs.access(path.join(ctx.root, rel));
+      return { detected: true, agent: 'kilo' };
+    } catch { /* next marker */ }
   }
+  return { detected: false };
 }

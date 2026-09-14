@@ -29,7 +29,7 @@ export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
 
   // First pass: collect all config and MCP servers
   for (const r of resources) {
-    if (r.type === 'opaque' && r.name.includes('settings.json') && r.content) {
+    if (r.type === 'opaque' && r.content && (r.name.includes('settings.json') || r.name.includes('.kilo'))) {
       try {
         Object.assign(openCodeConfig, buildOpenCodeConfig(JSON.parse(r.content)));
         hasSettings = true;
