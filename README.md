@@ -33,6 +33,9 @@ agent-migrate migrate claude-code opencode
 
 # Undo if needed
 agent-migrate rollback . <migration-id>
+
+# Any direction works — e.g. back to Claude Code
+agent-migrate migrate opencode claude-code
 ```
 
 ## Commands
@@ -53,6 +56,10 @@ agent-migrate rollback . <migration-id>
 |--------|--------|--------|
 | Claude Code | OpenCode | ✅ Supported |
 | Claude Code | Kilo Code | ✅ Supported |
+| OpenCode | Claude Code | ✅ Supported |
+| OpenCode | Kilo Code | ✅ Supported |
+| Kilo Code | Claude Code | ✅ Supported |
+| Kilo Code | OpenCode | ✅ Supported |
 
 ## How It Works
 

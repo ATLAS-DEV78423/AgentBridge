@@ -4,6 +4,8 @@ import { openCodeAdapter } from './opencode/index.js';
 import { kiloAdapter } from './kilo/index.js';
 import { registerWriter } from '../core/writers.js';
 import { writeOpenCodeFiles } from './opencode/writer.js';
+import { writeClaudeFiles } from './claude-code/writer.js';
+import { writeKiloFiles } from './kilo/writer.js';
 
 export const adapters: Record<string, AgentAdapter> = {
   'claude-code': claudeAdapter,
@@ -15,3 +17,5 @@ export const adapters: Record<string, AgentAdapter> = {
 
 // Register target writers
 registerWriter('opencode', writeOpenCodeFiles);
+registerWriter('claude-code', writeClaudeFiles);
+registerWriter('kilo', writeKiloFiles);

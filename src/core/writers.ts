@@ -3,7 +3,7 @@ import { ResourceBase } from './model/types.js';
 export type TargetFile = {
   path: string;
   content: string;
-  action: 'create' | 'skip';
+  action: 'create';
 };
 
 export type WriteFn = (resources: ResourceBase[]) => TargetFile[];

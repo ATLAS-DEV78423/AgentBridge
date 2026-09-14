@@ -41,6 +41,14 @@ describe('Claude Scanner', () => {
       expect(state.instructions.length).toBeGreaterThan(0);
     });
 
+    it('resource ids are relative to project root', async () => {
+      const bundle = await claudeAdapter.scanProject({ root: fixtureDir });
+      for (const resource of bundle.instructions) {
+        expect(resource.id).not.toContain(fixtureDir);
+        expect(resource.id.startsWith('instruction-')).toBe(true);
+      }
+    });
+
     it('deterministic output for same fixture', async () => {
       const state1 = await claudeAdapter.scanProject({ root: fixtureDir });
       const state2 = await claudeAdapter.scanProject({ root: fixtureDir });

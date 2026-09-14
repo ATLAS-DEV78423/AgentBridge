@@ -15,9 +15,9 @@ Commands:
   rollback <path> <migration-id>  Rollback a migration
 
 Supported agents:
-  claude-code                     Claude Code
-  opencode                        OpenCode
-  kilo                            Kilo Code
+  claude-code                     Claude Code (source & target)
+  opencode                        OpenCode (source & target)
+  kilo                            Kilo Code (source & target)
 `;
 
 export function showHelp(): void {

@@ -13,6 +13,29 @@ describe('Compatibility Rules', () => {
     expect(rules).toEqual([]);
   });
 
+  const AGENTS = ['claude-code', 'opencode', 'kilo'];
+
+  it('returns rules for opencode-to-claude-code', () => {
+    const rules = getRulesForMigration('opencode', 'claude-code');
+    expect(rules.length).toBe(3);
+    expect(rules.some(r => r.sourceCapability === 'instructions')).toBe(true);
+    expect(rules.some(r => r.sourceCapability === 'mcpServers')).toBe(true);
+  });
+
+  it('returns rules for kilo-to-claude-code', () => {
+    const rules = getRulesForMigration('kilo', 'claude-code');
+    expect(rules.length).toBe(3);
+  });
+
+  it('returns rules for every ordered pair of known agents', () => {
+    for (const src of AGENTS) {
+      for (const dst of AGENTS) {
+        if (src === dst) continue;
+        expect(getRulesForMigration(src, dst).length).toBe(3);
+      }
+    }
+  });
+
   it('rule has required fields', () => {
     const rules = getRulesForMigration('claude-code', 'opencode');
     const rule = rules[0];

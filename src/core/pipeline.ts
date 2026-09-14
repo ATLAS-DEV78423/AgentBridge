@@ -52,7 +52,6 @@ export async function migratePipeline(
 
   const targetFiles = writeFn(resources);
   const ops: TransactionOperation[] = targetFiles
-    .filter(f => f.action !== 'skip')
     .map(f => ({
       type: 'create' as const,
       targetPath: f.path,

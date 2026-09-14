@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { AgentBundle } from '../model/types.js';
 
 export type DetectionResult = {
@@ -18,7 +20,7 @@ export function createResource(
   root: string,
   content?: string,
 ) {
-  const relativePath = filePath.replace(root, '').replace(/^[/\\]/, '');
+  const relativePath = path.relative(root, filePath);
   return {
     id: `${type}-${relativePath}`,
     type,
