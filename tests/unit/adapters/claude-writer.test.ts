@@ -18,6 +18,11 @@ describe('writeClaudeFiles', () => {
     expect(files).toEqual([{ path: 'AGENTS.md', content: '# Rules', action: 'create' }]);
   });
 
+  it('normalizes foreign instruction files (GEMINI.md) to AGENTS.md', () => {
+    const files = writeClaudeFiles([inst('GEMINI.md', '# Rules')]);
+    expect(files[0].path).toBe('AGENTS.md');
+  });
+
   it('writes CLAUDE.md at its own path', () => {
     const files = writeClaudeFiles([inst('CLAUDE.md', '# Claude rules')]);
     expect(files[0].path).toBe('CLAUDE.md');

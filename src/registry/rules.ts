@@ -1,7 +1,7 @@
 import { CompatibilityRule } from '../core/compatibility/engine.js';
 import { MigrationStatus } from '../core/model/types.js';
 
-const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor'] as const;
+const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini'] as const;
 
 const CAPABILITIES: { capability: string; method: 'copy' | 'rewrite'; status: MigrationStatus }[] = [
   { capability: 'instructions', method: 'copy', status: MigrationStatus.DIRECT },

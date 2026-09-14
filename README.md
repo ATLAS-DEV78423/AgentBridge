@@ -66,10 +66,18 @@ agent-migrate migrate opencode claude-code
 | Claude Code | Cursor | ✅ Supported |
 | OpenCode | Cursor | ✅ Supported |
 | Kilo Code | Cursor | ✅ Supported |
+| Gemini CLI | Claude Code | ✅ Supported |
+| Gemini CLI | OpenCode | ✅ Supported |
+| Gemini CLI | Kilo Code | ✅ Supported |
+| Gemini CLI | Cursor | ✅ Supported |
+| Claude Code | Gemini CLI | ✅ Supported |
+| OpenCode | Gemini CLI | ✅ Supported |
+| Kilo Code | Gemini CLI | ✅ Supported |
+| Cursor | Gemini CLI | ✅ Supported |
 
 ## How It Works
 
-1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.jsonc`, `.kilo/`, `.cursor/` etc.
+1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.jsonc`, `.kilo/`, `.cursor/`, `.gemini/` etc.
 2. **Plan** — maps each resource via compatibility rules (DIRECT / ADAPTED / UNSUPPORTED)
 3. **Migrate** — writes target files, backs up originals
 4. **Rollback** — restores everything from backup

@@ -111,4 +111,40 @@ describe('migratePipeline directions', () => {
       args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
     });
   });
+
+  it('migrates opencode → gemini (mcp into .gemini/settings.json, no type field)', async () => {
+    const dir = await copyFixture('opencode-basic');
+    const { txId } = await migratePipeline('opencode', 'gemini', dir);
+    expect(txId).toBeTruthy();
+    const gemini = JSON.parse(await fs.readFile(path.join(dir, '.gemini', 'settings.json'), 'utf-8'));
+    expect(gemini.mcpServers.filesystem).toEqual({
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    });
+    expect(gemini.mcpServers.filesystem.type).toBeUndefined();
+  });
+
+  it('migrates gemini → claude-code (reverse, GEMINI.md → AGENTS.md translation)', async () => {
+    const dir = await copyFixture('gemini-basic');
+    const { txId } = await migratePipeline('gemini', 'claude-code', dir);
+    expect(txId).toBeTruthy();
+    await fs.access(path.join(dir, 'AGENTS.md'));
+    const settings = JSON.parse(await fs.readFile(path.join(dir, '.claude', 'settings.json'), 'utf-8'));
+    expect(settings.mcpServers.filesystem).toEqual({
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    });
+  });
+
+  it('migrates gemini → opencode (reverse)', async () => {
+    const dir = await copyFixture('gemini-basic');
+    const { txId } = await migratePipeline('gemini', 'opencode', dir);
+    expect(txId).toBeTruthy();
+    const oc = JSON.parse(await fs.readFile(path.join(dir, 'opencode.json'), 'utf-8'));
+    expect(oc.mcpServers.filesystem).toEqual({
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    });
+  });
 });

@@ -36,7 +36,9 @@ export function writeClaudeFiles(resources: ResourceBase[]): TargetFile[] {
 
   for (const r of resources) {
     if (r.type === 'instructions' && r.content) {
-      files.push({ path: r.name, content: r.content, action: 'create' });
+      // GEMINI.md is Gemini-only; agents here read AGENTS.md/CLAUDE.md.
+      const targetPath = r.name === 'GEMINI.md' ? 'AGENTS.md' : r.name;
+      files.push({ path: targetPath, content: r.content, action: 'create' });
     } else if (r.type === 'opaque' && r.content) {
       Object.assign(settings, buildClaudeSettings(r.content));
       hasSettings = true;

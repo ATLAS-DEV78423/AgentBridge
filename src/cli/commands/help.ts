@@ -19,6 +19,7 @@ Supported agents:
   opencode                        OpenCode (source & target)
   kilo                            Kilo Code (source & target)
   cursor                          Cursor (source & target)
+  gemini                          Gemini CLI (source & target)
 `;
 
 export function showHelp(): void {

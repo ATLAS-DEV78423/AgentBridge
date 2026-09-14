@@ -13,7 +13,21 @@ describe('Compatibility Rules', () => {
     expect(rules).toEqual([]);
   });
 
-  const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor'];
+  const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini'];
+
+  it('returns rules for claude-code-to-gemini with honest opaque status', () => {
+    const rules = getRulesForMigration('claude-code', 'gemini');
+    expect(rules.length).toBe(3);
+    expect(rules.find(r => r.sourceCapability === 'mcpServers')?.status).toBe('ADAPTED');
+    expect(rules.find(r => r.sourceCapability === 'opaque')?.status).toBe('UNSUPPORTED');
+  });
+
+  it('returns rules for gemini-to-claude-code (reverse)', () => {
+    const rules = getRulesForMigration('gemini', 'claude-code');
+    expect(rules.length).toBe(3);
+    expect(rules.some(r => r.sourceCapability === 'instructions')).toBe(true);
+    expect(rules.find(r => r.sourceCapability === 'mcpServers')?.status).toBe('ADAPTED');
+  });
 
   it('marks opaque ADAPTED only for targets that map opaque fields', () => {
     expect(getRulesForMigration('claude-code', 'opencode').find(r => r.sourceCapability === 'opaque')?.status).toBe('ADAPTED');
