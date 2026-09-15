@@ -8,6 +8,7 @@ import { executeDiff } from './commands/diff.js';
 import { executeRollback } from './commands/rollback.js';
 import { executeMigrate } from './commands/migrate.js';
 import { executeMigrateAll } from './commands/migrate-all.js';
+import { executeDoctor } from './commands/doctor.js';
 
 const args = process.argv.slice(2);
 
@@ -57,6 +58,11 @@ switch (command) {
     const dryRun = args.includes('--dry-run');
     if (!source || !target) { console.error('Usage: agent-migrate migrate <source> <target> [path] [--dry-run]'); process.exit(2); }
     executeMigrate(source, target, path, dryRun).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    break;
+  }
+  case 'doctor': {
+    const path = args[1] || '.';
+    executeDoctor(path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'migrate-all': {

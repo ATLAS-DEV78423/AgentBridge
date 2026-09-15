@@ -12,6 +12,7 @@ Commands:
   migrate <source> <target> [path] [--dry-run]
                                   Scan → plan → apply in one step
   migrate-all <source> [path]     Sync source config to every other detected agent
+  doctor [path]                   Validate detected agent configs against their schemas
   apply <source> <target> [path]  Apply a migration
   apply <source> <target> [path] --dry-run  Preview without writing
   rollback <path> <migration-id>  Rollback a migration

@@ -52,6 +52,7 @@ agent-migrate migrate-all claude-code .
 | `apply <source> <target> [path]` | Same as migrate (alias) |
 | `apply ... --dry-run` | Preview without writing |
 | `migrate-all <source> [path]` | Sync to every other detected agent |
+| `doctor [path]` | Validate detected agent configs against their documented schemas (exit 1 on errors) |
 | `rollback <path> <migration-id>` | Restore from backup |
 
 ## Supported agents
