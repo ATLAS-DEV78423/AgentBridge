@@ -1,5 +1,6 @@
 import { ResourceBase } from '../../core/model/types.js';
 import { TargetFile } from '../../core/writers.js';
+import { instructionsTarget } from '../simple-agents.js';
 
 /**
  * Translate stdio-style MCP server config to Cursor's format
@@ -17,9 +18,7 @@ export function writeCursorFiles(resources: ResourceBase[]): TargetFile[] {
 
   for (const r of resources) {
     if (r.type === 'instructions' && r.content) {
-      // GEMINI.md is Gemini-only; other agents read AGENTS.md.
-      const targetPath = r.name === 'GEMINI.md' ? 'AGENTS.md' : r.name;
-      files.push({ path: targetPath, content: r.content, action: 'create' });
+      files.push({ path: instructionsTarget(r.name), content: r.content, action: 'create' });
     } else if (r.type === 'mcpServers' && r.content) {
       try {
         mcpServers[r.name] = translateMcpServer(JSON.parse(r.content));

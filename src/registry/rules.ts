@@ -1,7 +1,24 @@
 import { CompatibilityRule } from '../core/compatibility/engine.js';
 import { MigrationStatus } from '../core/model/types.js';
 
-const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini'] as const;
+/**
+ * Project-config support confirmed from each agent's official docs. Codex's
+ * model field comes from .codex/config.toml (stored as normalized JSON).
+ */
+export const AGENT_IDS = [
+  'claude-code', 'opencode', 'kilo', 'cursor', 'gemini',
+  'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi',
+] as const;
+
+/** Per-target: which opaque fields the writer actually maps into its config. */
+const OPAQUE_FIELDS: Record<string, string[]> = {
+  'claude-code': ['model', 'permissions'],
+  'opencode': ['model', 'maxTokens'],
+  'kilo': ['model', 'maxTokens'],
+  'codex': ['model'],
+  // cursor, gemini, copilot, crush, grok, omp, muse-code, pi:
+  // no confirmed model-equivalent fields in their project configs.
+};
 
 const CAPABILITIES: { capability: string; method: 'copy' | 'rewrite'; status: MigrationStatus }[] = [
   { capability: 'instructions', method: 'copy', status: MigrationStatus.DIRECT },
@@ -9,21 +26,15 @@ const CAPABILITIES: { capability: string; method: 'copy' | 'rewrite'; status: Mi
   { capability: 'opaque', method: 'rewrite', status: MigrationStatus.ADAPTED },
 ];
 
-// Targets whose writer maps fields out of the source's opaque config
-// (model/permissions/maxTokens). Writers without such mappings must see
-// opaque marked UNSUPPORTED so plan/diff don't promise an adaptation
-// that never happens.
-const OPAQUE_TARGETS = new Set<string>(['claude-code', 'opencode', 'kilo']);
-
-const RULES: CompatibilityRule[] = AGENTS.flatMap(source =>
-  AGENTS
+const RULES: CompatibilityRule[] = AGENT_IDS.flatMap(source =>
+  AGENT_IDS
     .filter(target => target !== source)
     .flatMap(target =>
       CAPABILITIES.map(({ capability, method, status }) => ({
         id: `${source}-${capability}-${target}`,
         sourceCapability: capability,
         method,
-        status: capability === 'opaque' && !OPAQUE_TARGETS.has(target)
+        status: capability === 'opaque' && !(OPAQUE_FIELDS[target]?.length) 
           ? MigrationStatus.UNSUPPORTED
           : status,
       }))

@@ -1,5 +1,6 @@
 import { ResourceBase } from '../../core/model/types.js';
 import { TargetFile } from '../../core/writers.js';
+import { instructionsTarget } from '../simple-agents.js';
 
 /** Translate Claude Code MCP server config to OpenCode format. */
 function translateMcpServer(claudeConfig: Record<string, unknown>): Record<string, unknown> {
@@ -29,7 +30,9 @@ export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
 
   // First pass: collect all config and MCP servers
   for (const r of resources) {
-    if (r.type === 'opaque' && r.content && (r.name.includes('settings.json') || r.name.includes('.kilo'))) {
+    if (r.type === 'opaque' && r.content) {
+      // Scanners normalize opaque content to plain JSON (TOML/JSONC included),
+      // so parseability — not the filename — decides what maps.
       try {
         Object.assign(openCodeConfig, buildOpenCodeConfig(JSON.parse(r.content)));
         hasSettings = true;
@@ -60,9 +63,7 @@ export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
   // Second pass: write instruction files
   for (const r of resources) {
     if (r.type === 'instructions') {
-      // GEMINI.md is Gemini-only; other agents read AGENTS.md.
-      const targetPath = r.name === 'GEMINI.md' ? 'AGENTS.md' : r.name;
-      files.push({ path: targetPath, content: r.content || '', action: 'create' });
+      files.push({ path: instructionsTarget(r.name), content: r.content || '', action: 'create' });
     }
   }
 

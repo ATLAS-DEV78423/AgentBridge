@@ -9,7 +9,8 @@ Commands:
   scan [path]                     Scan directory for agent configs
   plan <source> <target> [path]   Show migration compatibility report
   diff <source> <target> [path]   Preview file changes
-  migrate <source> <target> [path] Scan → plan → apply in one step
+  migrate <source> <target> [path] [--dry-run]
+                                  Scan → plan → apply in one step
   migrate-all <source> [path]     Sync source config to every other detected agent
   apply <source> <target> [path]  Apply a migration
   apply <source> <target> [path] --dry-run  Preview without writing
@@ -21,6 +22,13 @@ Supported agents:
   kilo                            Kilo Code (source & target)
   cursor                          Cursor (source & target)
   gemini                          Gemini CLI (source & target)
+  codex                           OpenAI Codex (source & target)
+  copilot                         Copilot CLI (source & target)
+  crush                           Crush (source & target)
+  grok                            Grok (source & target)
+  omp                             Oh My Pi (source & target)
+  muse-code                       Muse Code (instructions only)
+  pi                              Pi (instructions only)
 `;
 
 export function showHelp(): void {

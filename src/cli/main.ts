@@ -54,8 +54,9 @@ switch (command) {
   }
   case 'migrate': {
     const source = args[1], target = args[2], path = args[3] || '.';
-    if (!source || !target) { console.error('Usage: agent-migrate migrate <source> <target> [path]'); process.exit(2); }
-    executeMigrate(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    const dryRun = args.includes('--dry-run');
+    if (!source || !target) { console.error('Usage: agent-migrate migrate <source> <target> [path] [--dry-run]'); process.exit(2); }
+    executeMigrate(source, target, path, dryRun).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'migrate-all': {

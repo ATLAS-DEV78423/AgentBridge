@@ -6,9 +6,15 @@ import { writeOpenCodeFiles } from '../../../src/adapters/opencode/writer.js';
 import { writeKiloFiles } from '../../../src/adapters/kilo/writer.js';
 import { writeCursorFiles } from '../../../src/adapters/cursor/writer.js';
 import { writeGeminiFiles } from '../../../src/adapters/gemini/writer.js';
+import { writeCodexFiles } from '../../../src/adapters/codex/writer.js';
+import { writeCopilotFiles, writeCrushFiles, writeGrokFiles, writeOmpFiles, writeMuseCodeFiles, writePiFiles } from '../../../src/adapters/simple-agents.js';
+import { parseToml } from '../../../src/core/toml.js';
 import { ResourceBase } from '../../../src/core/model/types.js';
 
-const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini'] as const;
+const AGENTS = [
+  'claude-code', 'opencode', 'kilo', 'cursor', 'gemini',
+  'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi',
+] as const;
 
 const WRITERS = {
   'claude-code': writeClaudeFiles,
@@ -16,28 +22,63 @@ const WRITERS = {
   'kilo': writeKiloFiles,
   'cursor': writeCursorFiles,
   'gemini': writeGeminiFiles,
+  'codex': writeCodexFiles,
+  'copilot': writeCopilotFiles,
+  'crush': writeCrushFiles,
+  'grok': writeGrokFiles,
+  'omp': writeOmpFiles,
+  'muse-code': writeMuseCodeFiles,
+  'pi': writePiFiles,
 };
 
-// A representative opaque config per source agent — what "model settings" means there.
-const OPAQUE: Record<string, ResourceBase> = {
-  'claude-code': { id: 'o', type: 'opaque', name: '.claude/settings.json', content: JSON.stringify({ model: 'test-model', permissions: {} }) },
-  'opencode': { id: 'o', type: 'opaque', name: 'opencode.jsonc', content: JSON.stringify({ provider: 'x', model: 'test-model' }) },
-  'kilo': { id: 'o', type: 'opaque', name: '.kilo/kilo.jsonc', content: JSON.stringify({ model: 'test-model', maxTokens: 1 }) },
-  'cursor': { id: 'o', type: 'opaque', name: '.cursor/mcp.json', content: JSON.stringify({ mcpServers: {} }) },
-  'gemini': { id: 'o', type: 'opaque', name: '.gemini/settings.json', content: JSON.stringify({ mcpServers: {} }) },
+// Where each target wants instructions.
+const INSTRUCTION_PATH: Record<string, string> = {
+  'gemini': 'GEMINI.md',
+  'muse-code': 'MUSE_CODE.md',
+  'copilot': '.github/copilot-instructions.md',
 };
+const instructionPath = (target: string): string => INSTRUCTION_PATH[target] ?? 'AGENTS.md';
+
+// A representative opaque config per source agent — what "model settings" means there.
+// Agents whose project config carries no model produce no model migration anywhere.
+const HAS_MODEL_SOURCES = new Set(['claude-code', 'opencode', 'kilo', 'codex']);
+const opaqueFor = (source: string): ResourceBase => ({
+  id: 'o',
+  type: 'opaque',
+  name: source === 'claude-code' ? '.claude/settings.json'
+    : source === 'opencode' ? 'opencode.jsonc'
+    : source === 'kilo' ? '.kilo/kilo.jsonc'
+    : source === 'codex' ? '.codex/config.toml'
+    : source === 'gemini' ? '.gemini/settings.json'
+    : source === 'cursor' ? '.cursor/mcp.json'
+    : source === 'crush' ? '.crush.json'
+    : source === 'omp' ? '.pi/mcp.json'
+    : source === 'copilot' ? '.copilot/mcp-config.json'
+    : source === 'grok' ? '.mcp.json'
+    : 'MUSE_CODE.md',
+  content: JSON.stringify(HAS_MODEL_SOURCES.has(source) ? { model: 'test-model' } : { mcpServers: {} }),
+});
 
 const inst = (name: string): ResourceBase => ({ id: 'i', type: 'instructions', name, content: '# R' });
 const mcp = (): ResourceBase => ({ id: 'm', type: 'mcpServers', name: 'fs', content: JSON.stringify({ command: 'npx', args: ['-y', 'm'] }) });
 
+function sourceInstructionName(source: string): string {
+  return source === 'gemini' ? 'GEMINI.md' : source === 'muse-code' ? 'MUSE_CODE.md' : 'AGENTS.md';
+}
+
+function extractModel(target: string, content: string): unknown {
+  try {
+    return target === 'codex' ? parseToml(content).model : JSON.parse(content).model;
+  } catch {
+    return undefined;
+  }
+}
+
 function migrates(source: string, target: string): { instructions: boolean; mcp: boolean; model: boolean } {
   const write = WRITERS[target as keyof typeof WRITERS];
-  const wants = target === 'gemini' ? 'GEMINI.md' : 'AGENTS.md';
-  const instructions = write([inst(source === 'gemini' ? 'GEMINI.md' : 'AGENTS.md')]).some(f => f.path === wants);
-  const mcpOk = write([mcp()]).some(f => f.content.includes('"fs"'));
-  const model = write([OPAQUE[source]]).some(f => {
-    try { return JSON.parse(f.content).model === 'test-model'; } catch { return false; }
-  });
+  const instructions = write([inst(sourceInstructionName(source))]).some(f => f.path === instructionPath(target));
+  const mcpOk = write([mcp()]).some(f => f.content.includes('fs'));
+  const model = write([opaqueFor(source)]).some(f => extractModel(target, f.content) === 'test-model');
   return { instructions, mcp: mcpOk, model };
 }
 

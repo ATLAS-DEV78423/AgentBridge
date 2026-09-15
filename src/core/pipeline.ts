@@ -6,6 +6,8 @@ import { evaluateCompatibility, CompatibilityResult } from './compatibility/engi
 import { getRulesForMigration } from '../registry/rules.js';
 import { createTransaction, applyTransaction, TransactionOperation } from './transaction/transaction.js';
 import { getWriter } from './writers.js';
+import { parseJsonc } from './jsonc.js';
+import { parseToml, serializeToml } from './toml.js';
 
 /** Flatten AgentBundle's typed arrays into a single ResourceBase[] with type set from section name. */
 export function flattenBundle(bundle: AgentBundle): ResourceBase[] {
@@ -40,6 +42,38 @@ export function deepMergeJson(
     }
   }
   return result;
+}
+
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/** Parse a config file by extension (TOML / JSONC / JSON); null if not a parseable object. */
+function readDoc(p: string, raw: string): Record<string, unknown> | null {
+  try {
+    if (p.endsWith('.toml')) {
+      return parseToml(raw);
+    }
+    if (p.endsWith('.jsonc')) {
+      const v = parseJsonc(raw);
+      return isPlainObject(v) ? v : null;
+    }
+    const v = JSON.parse(raw);
+    return isPlainObject(v) ? v : null;
+  } catch {
+    // .json files from real users often carry comments / trailing commas
+    // (JSONC is a strict JSON superset) — fall back before giving up.
+    try {
+      const v = parseJsonc(raw);
+      return isPlainObject(v) ? v : null;
+    } catch {
+      return null;
+    }
+  }
+}
+
+/** Serialize a merged doc back to its file's format. */
+function writeDoc(p: string, doc: Record<string, unknown>): string {
+  return p.endsWith('.toml') ? serializeToml(doc) : JSON.stringify(doc, null, 2);
 }
 
 export type PlanResult = {
@@ -81,19 +115,16 @@ export async function migratePipeline(
   for (const f of targetFiles) {
     let content = f.content;
     const fullPath = path.join(projectPath, f.path);
-    // Merge into existing JSON configs so user-added keys survive;
-    // markdown and non-JSON files replace wholesale as before.
+    // Merge into existing configs (JSON, JSONC, or TOML — by extension) so
+    // user-added keys survive; markdown and unparseable files replace as before.
     try {
       const existingRaw = await fs.readFile(fullPath, 'utf-8');
-      const existing = JSON.parse(existingRaw);
-      const incoming = JSON.parse(content);
-      if (
-        existing && typeof existing === 'object' && !Array.isArray(existing) &&
-        incoming && typeof incoming === 'object' && !Array.isArray(incoming)
-      ) {
-        content = JSON.stringify(deepMergeJson(existing, incoming), null, 2);
+      const existing = readDoc(f.path, existingRaw);
+      const incoming = readDoc(f.path, content);
+      if (existing && incoming) {
+        content = writeDoc(f.path, deepMergeJson(existing, incoming));
       }
-    } catch { /* no existing file, or either side isn't JSON — replace */ }
+    } catch { /* no existing file — write as-is */ }
     ops.push({ type: 'create' as const, targetPath: f.path, content });
   }
 
