@@ -36,3 +36,9 @@ jobs:
 
       - name: Validate agent configs (doctor)
         run: npx tsx src/cli/main.ts doctor .
+
+      - name: Build dist/
+        run: npm run build
+
+      - name: Smoke-test compiled CLI (scan, doctor, fix)
+        run: bash scripts/smoke.sh
