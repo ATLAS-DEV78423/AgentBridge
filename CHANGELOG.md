@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0] - 2026-09-15
+
+### Features
+- **`fix` syncs divergent project instruction files** — when `AGENTS.md` / `GEMINI.md` / `MUSE_CODE.md` carry different content, `fix` copies `AGENTS.md` (which every supported agent reads) over the stale copies, inside the standard backup transaction
+- `doctor` now reports **every** divergent instruction file instead of stopping at the first, so fixing one no longer hides another agent acting on stale rules
+- CI builds `dist/` and smoke-tests the **compiled CLI** (scan, doctor's exit-1 rejection, fix's in-place repair) on Node 22 and 24
+- Release workflow: pushing a `v*` tag runs tests → build → smoke → `npm publish` via the `NPM_TOKEN` secret, so a broken artifact can never ship
+
+### Docs & tooling
+- `RELEASING.md` documents the release flow, `NPM_TOKEN` setup, and the tag-pins-workflow gotcha
+- 184 tests (was 182)
+
 ## [1.4.0] - 2026-09-15
 
 ### Features
