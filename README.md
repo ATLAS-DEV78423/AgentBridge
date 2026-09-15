@@ -1,5 +1,9 @@
 # AgentBridge
 
+[![npm version](https://img.shields.io/npm/v/@superdev2347832/agent-bridge.svg)](https://www.npmjs.com/package/@superdev2347832/agent-bridge)
+[![CI](https://github.com/ATLAS-DEV78423/AgentBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/ATLAS-DEV78423/AgentBridge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > Migrate your AI coding agent configuration between 12 agents: Claude Code, OpenCode, Kilo Code, Cursor, Gemini CLI, Codex, Copilot CLI, Crush, Grok, omp, Muse Code, and Pi.
 
 A local-first CLI tool that discovers, compares, and migrates coding agent environments with backup and rollback.
@@ -7,8 +11,8 @@ A local-first CLI tool that discovers, compares, and migrates coding agent envir
 ## Installation
 
 ```bash
-# From npm
-npm install -g agent-migrate
+# From npm (installs the `agent-migrate` binary)
+npm install -g @superdev2347832/agent-bridge
 
 # From source
 git clone https://github.com/ATLAS-DEV78423/AgentBridge.git
@@ -33,6 +37,12 @@ agent-migrate migrate claude-code opencode
 
 # Undo if needed
 agent-migrate rollback . <migration-id>
+
+# Check configs for schema problems (exit 1 on errors — CI-friendly)
+agent-migrate doctor
+
+# Apply the safe auto-fixes (commented strict-JSON, divergent instructions)
+agent-migrate fix
 
 # Any direction works — e.g. back to Claude Code
 agent-migrate migrate opencode claude-code
