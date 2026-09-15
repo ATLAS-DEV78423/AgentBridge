@@ -1,11 +1,20 @@
 # Changelog
 
-## [Unreleased]
+## [1.3.0] - 2026-09-15
+
+### Features
+- **`doctor [path]`** — validates every detected agent's config against its documented schema: parseability by format (with a rename-to-`.jsonc` hint when a strict-JSON file carries comments), MCP key shape and wrong-key aliases, per-server `command`/`url` presence, and each agent's transport-tag policy (crush requires `type` on every server, cursor on stdio servers, gemini/codex forbid it). Exits 1 on errors, so it gates scripts and CI
+- **`fix [path]`** — applies the safe auto-fixes doctor identifies, inside the standard backup transaction (rollback just works). Today that's one class: strict-JSON configs failing only from comments/trailing commas are rewritten comment-free **in place** — data preserved, agent keeps its documented filename (renaming to `.jsonc` would break agents like Claude Code, so fix never renames). Schema problems are listed for a human with exit 1
+- CI now runs on every push and PR (previously main-only), with concurrency cancellation
+- Test fixtures are doctor-guarded — a fixture that stops satisfying an agent's schema fails the build through the existing `npm test` CI step
 
 ### Refactor
-- Plan/diff statuses now derive from each target's **real writer** via a `writerSupports` probe — the 132-entry rules table and compatibility engine are deleted, and what `plan` reports can no longer drift from what migration does
+- Plan/diff statuses derive from each target's **real writer** via a `writerSupports` probe — the 132-entry rules table and compatibility engine are deleted, and what `plan` reports can no longer drift from what migration does
 - Adapter + writer registered together in one list per agent; `registerWriter` throws on duplicates, making the "registered adapter, forgot writer" bug class structurally impossible (invariant test enforces exactly one adapter and one writer per agent)
 - README compatibility matrix drift-guard now runs through the production `planMigration` code path
+
+### Docs & tooling
+- 177 tests (was 163)
 
 ## [1.2.0] - 2026-09-15
 
