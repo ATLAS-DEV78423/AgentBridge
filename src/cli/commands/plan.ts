@@ -19,9 +19,9 @@ export async function executePlan(source: string, target: string, projectPath: s
   console.log(`Resources: ${resources.length}`);
   console.log('');
 
-  for (const { resource, compatibility } of plan) {
-    const icon = compatibility.status === 'DIRECT' ? '✓' : compatibility.status === 'UNSUPPORTED' ? '✗' : '~';
-    console.log(`  ${icon} ${resource.name} (${resource.type}) → ${compatibility.status}`);
+  for (const { resource, status } of plan) {
+    const icon = status === 'DIRECT' ? '✓' : status === 'UNSUPPORTED' ? '✗' : '~';
+    console.log(`  ${icon} ${resource.name} (${resource.type}) → ${status}`);
   }
 
   console.log('\nNo files changed.');

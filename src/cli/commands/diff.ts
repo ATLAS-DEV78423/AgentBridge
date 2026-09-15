@@ -16,10 +16,10 @@ export async function executeDiff(source: string, target: string, projectPath: s
   console.log('');
 
   let hasChanges = false;
-  for (const { resource, compatibility } of plan) {
-    if (compatibility.status !== 'UNSUPPORTED') {
+  for (const { resource, status, method } of plan) {
+    if (status !== 'UNSUPPORTED') {
       hasChanges = true;
-      const action = compatibility.method === 'copy' ? '+' : compatibility.method === 'rewrite' ? '~' : '-';
+      const action = method === 'copy' ? '+' : '~';
       console.log(`  ${action} ${resource.name} (${resource.type})`);
     }
   }

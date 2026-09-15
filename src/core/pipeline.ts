@@ -1,11 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { adapters } from '../adapters/registry.js';
-import { AgentBundle, ResourceBase } from './model/types.js';
-import { evaluateCompatibility, CompatibilityResult } from './compatibility/engine.js';
-import { getRulesForMigration } from '../registry/rules.js';
+import { AgentBundle, MigrationStatus, ResourceBase } from './model/types.js';
 import { createTransaction, applyTransaction, TransactionOperation } from './transaction/transaction.js';
-import { getWriter } from './writers.js';
+import { getWriter, writerSupports } from './writers.js';
 import { parseJsonc } from './jsonc.js';
 import { parseToml, serializeToml } from './toml.js';
 
@@ -78,15 +76,25 @@ function writeDoc(p: string, doc: Record<string, unknown>): string {
 
 export type PlanResult = {
   resource: ResourceBase;
-  compatibility: CompatibilityResult;
+  status: MigrationStatus;
+  method: 'copy' | 'rewrite';
 };
 
+/**
+ * Statuses come from the target's real writer via writerSupports — what plan
+ * reports is by construction what migration would do.
+ */
 export function planMigration(source: string, target: string, resources: ResourceBase[]): PlanResult[] {
-  const rules = getRulesForMigration(source, target);
-  return resources.map(resource => ({
-    resource,
-    compatibility: evaluateCompatibility(resource.type, rules)
-  }));
+  return resources.map(resource => {
+    const supported = writerSupports(target, resource);
+    return {
+      resource,
+      status: !supported
+        ? MigrationStatus.UNSUPPORTED
+        : resource.type === 'instructions' ? MigrationStatus.DIRECT : MigrationStatus.ADAPTED,
+      method: resource.type === 'instructions' ? 'copy' : 'rewrite',
+    };
+  });
 }
 
 export async function migratePipeline(
@@ -104,7 +112,7 @@ export async function migratePipeline(
   const bundle = await sourceAdapter.scanProject({ root: projectPath });
   const resources = flattenBundle(bundle);
   const plan = planMigration(source, target, resources);
-  const supported = plan.filter(p => p.compatibility.status !== 'UNSUPPORTED');
+  const supported = plan.filter(p => p.status !== 'UNSUPPORTED');
 
   console.log(`\nMigrating: ${source} → ${target}`);
   console.log(`  Supported: ${supported.length} resources`);

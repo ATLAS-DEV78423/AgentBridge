@@ -1,47 +1,50 @@
 import { AgentAdapter } from '../core/scanner/scanner.js';
-import { claudeAdapter } from './claude-code/index.js';
-import { openCodeAdapter } from './opencode/index.js';
-import { kiloAdapter } from './kilo/index.js';
-import { cursorAdapter } from './cursor/index.js';
-import { geminiAdapter } from './gemini/index.js';
-import { codexAdapter } from './codex/index.js';
-import { copilotAdapter, crushAdapter, grokAdapter, ompAdapter, museCodeAdapter, piAdapter } from './simple-agents.js';
 import { registerWriter } from '../core/writers.js';
-import { writeOpenCodeFiles } from './opencode/writer.js';
+import { claudeAdapter } from './claude-code/index.js';
 import { writeClaudeFiles } from './claude-code/writer.js';
+import { openCodeAdapter } from './opencode/index.js';
+import { writeOpenCodeFiles } from './opencode/writer.js';
+import { kiloAdapter } from './kilo/index.js';
 import { writeKiloFiles } from './kilo/writer.js';
+import { cursorAdapter } from './cursor/index.js';
 import { writeCursorFiles } from './cursor/writer.js';
+import { geminiAdapter } from './gemini/index.js';
 import { writeGeminiFiles } from './gemini/writer.js';
+import { codexAdapter } from './codex/index.js';
 import { writeCodexFiles } from './codex/writer.js';
-import { writeCopilotFiles, writeCrushFiles, writeGrokFiles, writeOmpFiles, writeMuseCodeFiles, writePiFiles } from './simple-agents.js';
+import {
+  copilotAdapter, writeCopilotFiles,
+  crushAdapter, writeCrushFiles,
+  grokAdapter, writeGrokFiles,
+  ompAdapter, writeOmpFiles,
+  museCodeAdapter, writeMuseCodeFiles,
+  piAdapter, writePiFiles,
+} from './simple-agents.js';
 
-export const adapters: Record<string, AgentAdapter> = {
-  'claude-code': claudeAdapter,
-  'opencode': openCodeAdapter,
-  'kilo': kiloAdapter,
-  'cursor': cursorAdapter,
-  'gemini': geminiAdapter,
-  'codex': codexAdapter,
-  'copilot': copilotAdapter,
-  'crush': crushAdapter,
-  'grok': grokAdapter,
-  'omp': ompAdapter,
-  'muse-code': museCodeAdapter,
-  'pi': piAdapter,
-};
+/**
+ * One entry per agent: the adapter (detector/scanner) and its target writer
+ * are registered together, so the "registered adapter, forgot writer" bug
+ * class is structurally impossible. registerWriter throws on duplicates,
+ * guarding against double registration.
+ */
+const AGENT_REGISTRATIONS: [string, AgentAdapter, (resources: Parameters<Parameters<typeof registerWriter>[1]>[0]) => ReturnType<Parameters<typeof registerWriter>[1]>][] = [
+  ['claude-code', claudeAdapter, writeClaudeFiles],
+  ['opencode', openCodeAdapter, writeOpenCodeFiles],
+  ['kilo', kiloAdapter, writeKiloFiles],
+  ['cursor', cursorAdapter, writeCursorFiles],
+  ['gemini', geminiAdapter, writeGeminiFiles],
+  ['codex', codexAdapter, writeCodexFiles],
+  ['copilot', copilotAdapter, writeCopilotFiles],
+  ['crush', crushAdapter, writeCrushFiles],
+  ['grok', grokAdapter, writeGrokFiles],
+  ['omp', ompAdapter, writeOmpFiles],
+  ['muse-code', museCodeAdapter, writeMuseCodeFiles],
+  ['pi', piAdapter, writePiFiles],
+];
 
+export const adapters: Record<string, AgentAdapter> = {};
 
-
-// Register target writers
-registerWriter('opencode', writeOpenCodeFiles);
-registerWriter('claude-code', writeClaudeFiles);
-registerWriter('kilo', writeKiloFiles);
-registerWriter('cursor', writeCursorFiles);
-registerWriter('gemini', writeGeminiFiles);
-registerWriter('codex', writeCodexFiles);
-registerWriter('copilot', writeCopilotFiles);
-registerWriter('crush', writeCrushFiles);
-registerWriter('grok', writeGrokFiles);
-registerWriter('omp', writeOmpFiles);
-registerWriter('muse-code', writeMuseCodeFiles);
-registerWriter('pi', writePiFiles);
+for (const [id, adapter, writeFn] of AGENT_REGISTRATIONS) {
+  adapters[id] = adapter;
+  registerWriter(id, writeFn);
+}

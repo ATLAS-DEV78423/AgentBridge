@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Refactor
+- Plan/diff statuses now derive from each target's **real writer** via a `writerSupports` probe — the 132-entry rules table and compatibility engine are deleted, and what `plan` reports can no longer drift from what migration does
+- Adapter + writer registered together in one list per agent; `registerWriter` throws on duplicates, making the "registered adapter, forgot writer" bug class structurally impossible (invariant test enforces exactly one adapter and one writer per agent)
+- README compatibility matrix drift-guard now runs through the production `planMigration` code path
+
 ## [1.2.0] - 2026-09-15
 
 ### Features
