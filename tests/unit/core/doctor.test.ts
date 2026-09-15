@@ -81,14 +81,63 @@ describe('doctor', () => {
     expect(problemsFor('cursor')).toMatch(/type/);
   });
 
-  it('tolerates comments in jsonc configs without flagging them', async () => {
+  it('tolerates comments in jsonc configs without erroring (missing-instructions warning may apply)', async () => {
     await write('opencode.jsonc', '{\n  // fine here\n  "model": "m",\n}');
     const report = await doctor(tmpDir);
-    expect(report.find(r => r.agent === 'opencode')!.problems).toEqual([]);
+    const errors = report.find(r => r.agent === 'opencode')!.problems.filter(p => p.severity === 'error');
+    expect(errors).toEqual([]);
   });
 
   it('reports an empty project as no agents, not an error', async () => {
     const report = await doctor(tmpDir);
     expect(report).toEqual([]);
+  });
+
+  it('warns when a detected agent has no instruction file at all', async () => {
+    await write('.gemini/settings.json', JSON.stringify({ mcpServers: {} }));
+    const report = await doctor(tmpDir);
+    const p = report.find(r => r.agent === 'gemini')!.problems[0];
+    expect(p.severity).toBe('warning');
+    expect(p.message).toMatch(/GEMINI\.md/);
+    expect(p.message).toMatch(/no instruction file/i);
+  });
+
+  it('warns on divergent instruction files across agents', async () => {
+    await write('.gemini/settings.json', JSON.stringify({ mcpServers: {} }));
+    await write('GEMINI.md', '# Gemini rules');
+    await write('AGENTS.md', '# Different rules entirely');
+
+    const report = await doctor(tmpDir);
+    const project = report.find(r => r.agent === 'project');
+    expect(project).toBeDefined();
+    expect(project!.problems[0].severity).toBe('warning');
+    expect(project!.problems[0].message).toMatch(/AGENTS\.md.*GEMINI\.md|GEMINI\.md.*AGENTS\.md/);
+    expect(project!.problems[0].message).toMatch(/diverge/i);
+  });
+
+  it('does not warn when multiple instruction files have identical content', async () => {
+    await write('.gemini/settings.json', JSON.stringify({ mcpServers: {} }));
+    await write('GEMINI.md', '# Same rules');
+    await write('AGENTS.md', '# Same rules');
+    const report = await doctor(tmpDir);
+    expect(report.find(r => r.agent === 'project')).toBeUndefined();
+  });
+
+  it('excludes copilot-specific supplemental instructions from the divergence check', async () => {
+    await write('.copilot/mcp-config.json', '{}');
+    await write('.github/copilot-instructions.md', '# copilot-specific tips');
+    await write('AGENTS.md', '# general rules');
+    const report = await doctor(tmpDir);
+    expect(report.find(r => r.agent === 'project')).toBeUndefined();
+    // copilot found its own instruction file → no missing-file warning either
+    expect(report.find(r => r.agent === 'copilot')!.problems).toEqual([]);
+  });
+
+  it('accepts either of claude’s instruction files', async () => {
+    await fs.mkdir(path.join(tmpDir, '.claude'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, '.claude', 'settings.json'), '{}');
+    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), '# claude rules');
+    const report = await doctor(tmpDir);
+    expect(report.find(r => r.agent === 'claude-code')!.problems).toEqual([]);
   });
 });

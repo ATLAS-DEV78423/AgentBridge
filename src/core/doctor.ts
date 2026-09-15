@@ -48,6 +48,30 @@ const SPECS: Record<string, ConfigSpec> = {
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   v !== null && typeof v === 'object' && !Array.isArray(v);
 
+/** Instruction files each agent reads (mirrors the scanners' scan lists). */
+const INSTRUCTION_FILES: Record<string, string[]> = {
+  'claude-code': ['AGENTS.md', 'CLAUDE.md'],
+  'opencode': ['AGENTS.md'],
+  'kilo': ['AGENTS.md'],
+  'cursor': ['AGENTS.md'],
+  'gemini': ['GEMINI.md'],
+  'codex': ['AGENTS.md'],
+  'copilot': ['.github/copilot-instructions.md'],
+  'crush': ['AGENTS.md'],
+  'grok': ['AGENTS.md'],
+  'omp': ['AGENTS.md'],
+  'muse-code': ['MUSE_CODE.md'],
+  'pi': ['AGENTS.md'],
+};
+
+/**
+ * Project-general instruction files different agents read as "the" project
+ * rules. When several exist they should carry the same content — divergence
+ * means agents act on different rules. Agent-specific supplemental files
+ * (CLAUDE.md, copilot-instructions.md) are deliberately excluded.
+ */
+const PROJECT_FILES = ['AGENTS.md', 'GEMINI.md', 'MUSE_CODE.md'];
+
 /** Best-effort line number from a JSON.parse error message. */
 function lineOfParseError(err: unknown): number | undefined {
   const msg = err instanceof Error ? err.message : '';
@@ -169,8 +193,43 @@ export async function doctor(projectPath: string): Promise<DoctorAgentReport[]> 
       }
     }
 
+    // Instruction files: warn when a detected agent has none of its own
+    // (independent of whether a config file was found).
+    if (INSTRUCTION_FILES[agentId]) {
+      const candidates = INSTRUCTION_FILES[agentId];
+      const hasAny = await Promise.all(candidates.map(rel =>
+        fs.access(path.join(projectPath, rel)).then(() => true, () => false)));
+      if (!hasAny.some(Boolean)) {
+        problems.push({
+          severity: 'warning',
+          file: candidates[0],
+          message: `no instruction file — ${agentId} reads ${candidates.join(' or ')}; migration would create one from another agent's rules`,
+        });
+      }
+    }
+
     reports.push({ agent: agentId, problems });
   }
+
+  // Project-level check: instruction files that should agree but don't.
+  const projectProblems: DoctorProblem[] = [];
+  const contents: { file: string; content: string }[] = [];
+  for (const file of PROJECT_FILES) {
+    try {
+      contents.push({ file, content: await fs.readFile(path.join(projectPath, file), 'utf-8') });
+    } catch { /* absent */ }
+  }
+  for (let i = 1; i < contents.length; i++) {
+    if (contents[i].content !== contents[0].content) {
+      projectProblems.push({
+        severity: 'warning',
+        file: '',
+        message: `instruction files diverge: ${contents[0].file} and ${contents[i].file} differ — different agents will act on different rules; keep them in sync or consolidate into AGENTS.md`,
+      });
+      break;
+    }
+  }
+  if (projectProblems.length > 0) reports.push({ agent: 'project', problems: projectProblems });
 
   return reports.sort((a, b) => a.agent.localeCompare(b.agent));
 }
