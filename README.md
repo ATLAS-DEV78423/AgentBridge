@@ -237,7 +237,11 @@ Notes:
 npm test          # run tests
 npm run typecheck # type check
 npm run build     # compile to dist/
+bash scripts/smoke.sh  # smoke-test the compiled CLI (run npm run build first)
 ```
+
+Maintainers: see [RELEASING.md](RELEASING.md) for the release flow and
+`NPM_TOKEN` setup. Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
