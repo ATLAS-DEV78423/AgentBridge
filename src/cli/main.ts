@@ -9,6 +9,7 @@ import { executeRollback } from './commands/rollback.js';
 import { executeMigrate } from './commands/migrate.js';
 import { executeMigrateAll } from './commands/migrate-all.js';
 import { executeDoctor } from './commands/doctor.js';
+import { executeFix } from './commands/fix.js';
 
 const args = process.argv.slice(2);
 
@@ -63,6 +64,11 @@ switch (command) {
   case 'doctor': {
     const path = args[1] || '.';
     executeDoctor(path).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    break;
+  }
+  case 'fix': {
+    const path = args[1] || '.';
+    executeFix(path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'migrate-all': {
