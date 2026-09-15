@@ -104,10 +104,16 @@ export async function migratePipeline(
   dryRun = false
 ): Promise<{ txId: string | null; fileCount: number }> {
   const sourceAdapter = adapters[source];
-  if (!sourceAdapter) throw new Error(`Unknown source agent: ${source}`);
+  if (!sourceAdapter) throw new Error(`Unknown source agent: ${source}. Supported: claude-code, opencode, kilo, cursor, gemini, codex, copilot, crush, grok, omp, muse-code, pi`);
 
   const writeFn = getWriter(target);
-  if (!writeFn) throw new Error(`Target writer for ${target} not yet implemented`);
+  if (!writeFn) throw new Error(`Unknown target agent: ${target}. Supported: claude-code, opencode, kilo, cursor, gemini, codex, copilot, crush, grok, omp, muse-code, pi`);
+
+  try {
+    await fs.access(projectPath);
+  } catch {
+    throw new Error(`Project path not found: ${projectPath}`);
+  }
 
   const bundle = await sourceAdapter.scanProject({ root: projectPath });
   const resources = flattenBundle(bundle);

@@ -1,0 +1,58 @@
+import { describe, it, expect } from 'vitest';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const run = promisify(execFile);
+const CLI = ['npx', 'tsx', 'src/cli/main.ts'];
+const repo = path.resolve('.');
+
+async function runCli(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
+  try {
+    const { stdout, stderr } = await run(CLI[0], [...CLI.slice(1), ...args], { cwd: repo });
+    return { code: 0, stdout, stderr };
+  } catch (err: unknown) {
+    const e = err as { code: number; stdout: string; stderr: string };
+    return { code: e.code, stdout: e.stdout, stderr: e.stderr };
+  }
+}
+
+describe('careless-argument handling (playtest findings)', () => {
+  it('migrate --dry-run before the path is a flag, not a directory', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'agentbridge-args-'));
+    await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), '# Rules');
+    await fs.mkdir(path.join(tmpDir, '.claude'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, '.claude', 'settings.json'), JSON.stringify({ mcpServers: { fs: { command: 'npx' } } }));
+
+    const { code, stdout, stderr } = await runCli(['migrate', 'claude-code', 'grok', '--dry-run']);
+    expect(code).toBe(0);
+    expect(stderr).not.toMatch(/not found/i);
+    // the flag must not have shifted the path positional: the default '.' is scanned,
+    // which is this repo — its AGENTS.md is a real claude-code resource.
+    expect(stdout).toMatch(/AGENTS\.md/);
+    await expect(fs.access(path.join(tmpDir, '.mcp.json'))).rejects.toThrow();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('a nonexistent project path is an error, not a silent empty migration', async () => {
+    const { code, stderr } = await runCli(['migrate', 'claude-code', 'grok', '/nope/nope']);
+    expect(code).toBe(1);
+    expect(stderr).toMatch(/Project path not found/i);
+  });
+
+  it('self-migration is rejected with a clear message', async () => {
+    const { code, stderr } = await runCli(['migrate', 'claude-code', 'claude-code']);
+    expect(code).toBe(2);
+    expect(stderr).toMatch(/same agent/i);
+  });
+
+  it('an unknown target names the agent and the supported list', async () => {
+    const { code, stderr } = await runCli(['migrate', 'claude-code', 'windsurf']);
+    expect(code).toBe(1);
+    expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/Supported:/);
+    expect(stderr).toMatch(/kilo/); // spot-check the list is the real one
+  });
+});
