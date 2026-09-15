@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0] - 2026-09-15
+
+### Features
+- `doctor` validates **instruction files**: warns when a detected agent has none of its own (`AGENTS.md` / `CLAUDE.md` / `GEMINI.md` / `MUSE_CODE.md` / `.github/copilot-instructions.md`, mirrored from the scanners' lists), and warns when project-general instruction files (`AGENTS.md` / `GEMINI.md` / `MUSE_CODE.md`) carry **divergent content** — different agents would act on different rules. Agent-specific supplemental files (`CLAUDE.md`, copilot-instructions) are deliberately excluded from the comparison
+- CI runs `doctor` over the repo root as an explicit step alongside tests and typecheck
+
+### Docs & tooling
+- 182 tests (was 177)
+
 ## [1.3.0] - 2026-09-15
 
 ### Features
