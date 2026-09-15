@@ -53,6 +53,30 @@ describe('fixProject (safe auto-fixes only)', () => {
     expect(JSON.parse(await fs.readFile(path.join(tmpDir, '.crush.json'), 'utf-8')).mcp.fs).toEqual({ command: 'npx' });
   });
 
+  it('syncs divergent project instruction files from AGENTS.md, with backups', async () => {
+    await write('.gemini/settings.json', JSON.stringify({ mcpServers: {} }));
+    await write('AGENTS.md', '# the real rules');
+    await write('GEMINI.md', '# stale gemini rules');
+    await write('MUSE_CODE.md', '# stale muse rules');
+
+    const { txId, fixes } = await fixProject(tmpDir);
+    expect(fixes).toEqual(['GEMINI.md', 'MUSE_CODE.md']);
+    expect(txId).toBeTruthy();
+
+    expect(await fs.readFile(path.join(tmpDir, 'GEMINI.md'), 'utf-8')).toBe('# the real rules');
+    expect(await fs.readFile(path.join(tmpDir, 'MUSE_CODE.md'), 'utf-8')).toBe('# the real rules');
+    expect(await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf-8')).toBe('# the real rules'); // source untouched
+  });
+
+  it('does not sync when the project-general files already agree', async () => {
+    await write('.gemini/settings.json', JSON.stringify({ mcpServers: {} }));
+    await write('AGENTS.md', '# same');
+    await write('GEMINI.md', '# same');
+    const { fixes, txId } = await fixProject(tmpDir);
+    expect(fixes).toEqual([]);
+    expect(txId).toBeNull();
+  });
+
   it('changes nothing (and returns no tx) on an already-clean project', async () => {
     await write('AGENTS.md', '# Rules');
     await fs.mkdir(path.join(tmpDir, '.claude'), { recursive: true });

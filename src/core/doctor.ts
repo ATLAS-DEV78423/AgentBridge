@@ -219,6 +219,8 @@ export async function doctor(projectPath: string): Promise<DoctorAgentReport[]> 
       contents.push({ file, content: await fs.readFile(path.join(projectPath, file), 'utf-8') });
     } catch { /* absent */ }
   }
+  // One warning per divergent file (no break): hiding later divergences
+  // would leave agents acting on stale rules even after fixing the first.
   for (let i = 1; i < contents.length; i++) {
     if (contents[i].content !== contents[0].content) {
       projectProblems.push({
@@ -226,7 +228,6 @@ export async function doctor(projectPath: string): Promise<DoctorAgentReport[]> 
         file: '',
         message: `instruction files diverge: ${contents[0].file} and ${contents[i].file} differ — different agents will act on different rules; keep them in sync or consolidate into AGENTS.md`,
       });
-      break;
     }
   }
   if (projectProblems.length > 0) reports.push({ agent: 'project', problems: projectProblems });

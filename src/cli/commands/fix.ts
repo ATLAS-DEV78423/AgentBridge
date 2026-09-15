@@ -18,9 +18,12 @@ export async function executeFix(projectPath: string): Promise<void> {
   }
 
   console.log(`\nFixed ${fixes.length} file(s):\n`);
-  for (const f of fixes) console.log(`  ✓ ${f} — rewritten comment-free (comments are not valid in strict-JSON configs)`);
+  for (const f of fixes) console.log(`  ✓ ${f} — safe auto-fix applied (original backed up)`);
+  console.log('\nCommented strict-JSON configs were rewritten comment-free; divergent');
+  console.log('instruction files were synced from AGENTS.md. Run "agent-migrate doctor"');
+  console.log('to see anything left for a human.');
 
   console.log(`\nBackup: .agentbridge/backups/${txId}`);
   console.log(`\nRollback: agent-migrate rollback ${projectPath} ${txId}`);
-  console.log('\nFix complete. Run "agent-migrate doctor" to see anything left for a human.');
+  console.log('\nFix complete.');
 }
