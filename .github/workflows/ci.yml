@@ -42,3 +42,26 @@ jobs:
 
       - name: Smoke-test compiled CLI (scan, doctor, fix)
         run: bash scripts/smoke.sh
+
+  # Proves every supported source→target migration pair through the real
+  # CLI (seed → migrate → doctor-validate → data checks). Runs once: the
+  # pair matrix isn't node-version-sensitive, and the unit/integration
+  # matrix above already covers both versions.
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Full-migration sweep (132 pairs)
+        run: npm run sweep
