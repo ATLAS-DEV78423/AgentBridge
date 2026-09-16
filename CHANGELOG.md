@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.6.0] - 2026-09-16
+
+### Features
+- **`fix --dry-run`** — previews every planned auto-fix with before/after content and writes nothing; the same backup-transaction apply path as before when run without the flag
+- **Honest migrate feedback** — `migrate`/`apply`/`migrate-all` surface doctor's config errors (file:line) instead of silently dropping an unparseable source config's servers; healthy projects stay warning-free
+- `plan` and `diff` validate both agent ids against the registry — `diff` no longer exits 0 claiming "nothing to do" for an unknown target, and `plan`'s stale 3-agent list is replaced by the full registry-derived list
+- `scan` prints the agent **id** next to the display name (`Detected: Claude Code (id: claude-code)`) — the id every other command requires
+
+### Fixes
+- CLI no longer crashes with EPIPE when output is piped (`agent-migrate scan | head`)
+- Positional-arg parsing is flag-position transparent (`migrate s t --dry-run` no longer treats the flag as a path)
+- Self-migration is rejected with exit 2; nonexistent project paths are an error, not a silent empty migration
+- `.agentbridge/` backup dirs are gitignored so users' `git status` stays clean
+
+### Docs
+- Playtest findings documented; README's command table covers `fix --dry-run`
+
 ## [1.5.0] - 2026-09-15
 
 ### Features
