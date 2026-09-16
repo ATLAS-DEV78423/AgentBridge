@@ -32,7 +32,7 @@ type ConfigSpec = {
 
 const SPECS: Record<string, ConfigSpec> = {
   'claude-code': { configPaths: [{ path: '.claude/settings.json', format: 'json' }], mcpKey: 'mcpServers', transport: null },
-  'opencode': { configPaths: [{ path: 'opencode.jsonc', format: 'jsonc' }, { path: 'opencode.json', format: 'json' }], mcpKey: 'mcpServers', transport: null },
+  'opencode': { configPaths: [{ path: 'opencode.jsonc', format: 'jsonc' }, { path: 'opencode.json', format: 'json' }], mcpKey: 'mcp', mcpKeyAliases: { mcpServers: 'mcp' }, transport: null },
   'kilo': { configPaths: [{ path: '.kilo/kilo.jsonc', format: 'jsonc' }, { path: '.kilo/config.json', format: 'json' }], mcpKey: 'mcp', mcpKeyAliases: { mcpServers: 'mcp' }, transport: null },
   'cursor': { configPaths: [{ path: '.cursor/mcp.json', format: 'json' }], mcpKey: 'mcpServers', transport: 'required-stdio' },
   'gemini': { configPaths: [{ path: '.gemini/settings.json', format: 'json' }], mcpKey: 'mcpServers', transport: 'forbidden' },

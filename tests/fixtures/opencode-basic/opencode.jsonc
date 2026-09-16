@@ -1,10 +1,17 @@
 {
+  "$schema": "https://opencode.ai/config.json",
   "provider": "anthropic",
   "model": "claude-sonnet-4-20250514",
-  "mcpServers": {
+  "mcp": {
     "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+      "environment": { "HOME": "/tmp" }
+    },
+    "web": {
+      "type": "remote",
+      "url": "https://example.invalid/mcp",
+      "headers": { "Authorization": "Bearer tok" }
     }
   }
 }

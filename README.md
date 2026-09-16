@@ -71,7 +71,7 @@ agent-migrate migrate-all claude-code .
 | Agent | ID | Project config | Instructions file |
 |-------|----|----------------|-------------------|
 | Claude Code | `claude-code` | `.claude/settings.json` | AGENTS.md |
-| OpenCode | `opencode` | `opencode.jsonc` | AGENTS.md |
+| OpenCode | `opencode` | `opencode.json[c]` | AGENTS.md |
 | Kilo Code | `kilo` | `.kilo/kilo.jsonc` | AGENTS.md |
 | Cursor | `cursor` | `.cursor/mcp.json` | AGENTS.md |
 | Gemini CLI | `gemini` | `.gemini/settings.json` | GEMINI.md |
@@ -90,7 +90,7 @@ Honest caveats:
 
 ## How It Works
 
-1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.jsonc`, `.kilo/`, `.cursor/`, `.gemini/`, `.codex/`, `.copilot/`, `.crush.json`, `.mcp.json`, `.pi/` etc.
+1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.json[c]`, `.kilo/`, `.cursor/`, `.gemini/`, `.codex/`, `.copilot/`, `.crush.json`, `.mcp.json`, `.pi/` etc.
 2. **Plan** — maps each resource via compatibility rules (DIRECT / ADAPTED / UNSUPPORTED)
 3. **Migrate** — writes target files, backing up originals; existing JSON/JSONC/TOML configs are **merged**, so your hand-added keys survive
 4. **Rollback** — restores everything from backup

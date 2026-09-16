@@ -5,7 +5,7 @@ import { AgentBundle, ResourceBase } from '../core/model/types.js';
 import { TargetFile, WriteFn } from '../core/writers.js';
 
 /** Agent-specific instruction filenames that must not leak into other targets. */
-const FOREIGN_INSTRUCTIONS: Record<string, string> = { 'GEMINI.md': 'AGENTS.md', 'MUSE_CODE.md': 'AGENTS.md' };
+const FOREIGN_INSTRUCTIONS: Record<string, string> = { 'GEMINI.md': 'AGENTS.md', 'MUSE_CODE.md': 'AGENTS.md', '.github/copilot-instructions.md': 'AGENTS.md' };
 
 /** Where an instruction file belongs in a generic target; agent-specific names normalize to AGENTS.md. */
 export function instructionsTarget(name: string): string {

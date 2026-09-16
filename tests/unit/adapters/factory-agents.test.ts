@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { copilotAdapter, writeCopilotFiles, crushAdapter, writeCrushFiles, grokAdapter, writeGrokFiles, ompAdapter, writeOmpFiles, museCodeAdapter, writeMuseCodeFiles, piAdapter, writePiFiles } from '../../../src/adapters/simple-agents.js';
+import { copilotAdapter, writeCopilotFiles, crushAdapter, writeCrushFiles, grokAdapter, writeGrokFiles, ompAdapter, writeOmpFiles, museCodeAdapter, writeMuseCodeFiles, piAdapter, writePiFiles, instructionsTarget } from '../../../src/adapters/simple-agents.js';
 import { AgentAdapter } from '../../../src/core/scanner/scanner.js';
 import { TargetFile } from '../../../src/core/writers.js';
 
@@ -149,5 +149,16 @@ describe('factory per-agent differences', () => {
       const files = write([{ id: 'i', type: 'instructions', name: 'MUSE_CODE.md', content: '# R' }]);
       expect(files.map(f => f.path)).toEqual([expectedPath]);
     }
+  });
+
+  it('copilot-instructions.md as a source normalizes to AGENTS.md in the AGENTS.md family', () => {
+    // Copilot's rules must land where claude/opencode/kilo/cursor/codex
+    // actually read them, not at copilot's agent-specific path.
+    for (const write of [writeCopilotFiles, writeCrushFiles, writeGrokFiles, writeOmpFiles, writePiFiles]) {
+      void write; // family members below are the real subjects
+    }
+    expect(instructionsTarget('.github/copilot-instructions.md')).toBe('AGENTS.md');
+    const files = writeGrokFiles([{ id: 'i', type: 'instructions', name: '.github/copilot-instructions.md', content: '# R' }]);
+    expect(files.map(f => f.path)).toEqual(['AGENTS.md']);
   });
 });

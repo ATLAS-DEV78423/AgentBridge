@@ -45,10 +45,16 @@ describe('migratePipeline directions', () => {
     expect(txId).toBeTruthy();
     const settings = JSON.parse(await fs.readFile(path.join(dir, '.claude', 'settings.json'), 'utf-8'));
     expect(settings.model).toBe('claude-sonnet-4-20250514');
-    // OpenCode's explicit stdio type is dropped for Claude
+    // OpenCode's local dialect (array command, environment) normalizes for Claude
     expect(settings.mcpServers.filesystem).toEqual({
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+      env: { HOME: '/tmp' },
+    });
+    // remote servers keep url/headers, minus the type tag
+    expect(settings.mcpServers.web).toEqual({
+      url: 'https://example.invalid/mcp',
+      headers: { Authorization: 'Bearer tok' },
     });
   });
 
@@ -70,7 +76,9 @@ describe('migratePipeline directions', () => {
     expect(kilo.mcp.filesystem).toEqual({
       type: 'local',
       command: ['npx', '-y', '@modelcontextprotocol/server-filesystem', '.'],
+      environment: { HOME: '/tmp' },
     });
+    expect(kilo.mcp.web).toEqual({ type: 'remote', url: 'https://example.invalid/mcp', headers: { Authorization: 'Bearer tok' } });
   });
 
   it('kilo → opencode works', async () => {
@@ -109,7 +117,9 @@ describe('migratePipeline directions', () => {
       type: 'stdio',
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+      env: { HOME: '/tmp' },
     });
+    expect(cursor.mcpServers.web).toEqual({ url: 'https://example.invalid/mcp', headers: { Authorization: 'Bearer tok' } });
   });
 
   it('migrates opencode → gemini (mcp into .gemini/settings.json, no type field)', async () => {
@@ -120,8 +130,10 @@ describe('migratePipeline directions', () => {
     expect(gemini.mcpServers.filesystem).toEqual({
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+      env: { HOME: '/tmp' },
     });
     expect(gemini.mcpServers.filesystem.type).toBeUndefined();
+    expect(gemini.mcpServers.web).toEqual({ url: 'https://example.invalid/mcp', headers: { Authorization: 'Bearer tok' } });
   });
 
   it('migrates gemini → claude-code (reverse, GEMINI.md → AGENTS.md translation)', async () => {
@@ -141,10 +153,9 @@ describe('migratePipeline directions', () => {
     const { txId } = await migratePipeline('gemini', 'opencode', dir);
     expect(txId).toBeTruthy();
     const oc = JSON.parse(await fs.readFile(path.join(dir, 'opencode.json'), 'utf-8'));
-    expect(oc.mcpServers.filesystem).toEqual({
-      type: 'stdio',
-      command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    expect(oc.mcp.filesystem).toEqual({
+      type: 'local',
+      command: ['npx', '-y', '@modelcontextprotocol/server-filesystem', '.'],
     });
   });
 
@@ -192,7 +203,7 @@ describe('migratePipeline directions', () => {
     await fs.writeFile(path.join(dir, 'opencode.json'), JSON.stringify({
       theme: 'user-dark',
       model: 'user-custom-model',
-      mcpServers: { userSrv: { type: 'stdio', command: 'user-cmd' } },
+      mcp: { userSrv: { type: 'local', command: ['user-cmd'] } },
     }));
 
     const { txId } = await migratePipeline('claude-code', 'opencode', dir);
@@ -201,13 +212,12 @@ describe('migratePipeline directions', () => {
     const oc = JSON.parse(await fs.readFile(path.join(dir, 'opencode.json'), 'utf-8'));
     // user-only keys preserved
     expect(oc.theme).toBe('user-dark');
-    expect(oc.mcpServers.userSrv).toEqual({ type: 'stdio', command: 'user-cmd' });
+    expect(oc.mcp.userSrv).toEqual({ type: 'local', command: ['user-cmd'] });
     // incoming values win on conflict
     expect(oc.model).toBe('claude-sonnet-4-20250514');
-    expect(oc.mcpServers.filesystem).toEqual({
-      type: 'stdio',
-      command: 'npx',
-      args: ['-y', 'fs-mcp'],
+    expect(oc.mcp.filesystem).toEqual({
+      type: 'local',
+      command: ['npx', '-y', 'fs-mcp'],
     });
   });
 

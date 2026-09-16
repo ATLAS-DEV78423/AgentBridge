@@ -2,43 +2,66 @@ import { ResourceBase } from '../../core/model/types.js';
 import { TargetFile } from '../../core/writers.js';
 import { instructionsTarget } from '../simple-agents.js';
 
-/** Translate Claude Code MCP server config to OpenCode format. */
-function translateMcpServer(claudeConfig: Record<string, unknown>): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  // OpenCode requires explicit type field; Claude infers stdio
-  result.type = 'stdio';
-  if (claudeConfig.command) result.command = claudeConfig.command;
-  if (claudeConfig.args) result.args = claudeConfig.args;
-  if (claudeConfig.env) result.env = claudeConfig.env;
-  return result;
+/**
+ * Canonical command/args/env → OpenCode's documented dialect
+ * (opencode.ai/docs/mcp-servers): local servers are `type: "local"` with an
+ * array `command` and `environment`; remote servers are `type: "remote"` with
+ * `url` (+ headers). Legacy `mcpServers`-shaped opaque configs map through
+ * the same translation.
+ */
+function translateMcpServer(server: Record<string, unknown>): Record<string, unknown> {
+  if (typeof server.url === 'string') {
+    return {
+      type: 'remote',
+      url: server.url,
+      ...(server.headers && typeof server.headers === 'object' ? { headers: server.headers } : {}),
+    };
+  }
+  return {
+    type: 'local',
+    command: [
+      ...(typeof server.command === 'string' ? [server.command] : []),
+      ...(Array.isArray(server.args) ? server.args : []),
+    ],
+    ...(server.env && typeof server.env === 'object' ? { environment: server.env } : {}),
+  };
 }
 
-/** Build opencode.json from Claude Code settings. */
-function buildOpenCodeConfig(claudeSettings: Record<string, unknown>): Record<string, unknown> {
-  const config: Record<string, unknown> = {};
-  if (claudeSettings.model) config.model = claudeSettings.model;
-  if (claudeSettings.permissions) config.permissions = claudeSettings.permissions;
-  // MCP servers are handled separately via translateMcpServer
-  return config;
+/** Pick the subset of an agent's opaque config that OpenCode understands. */
+function buildOpenCodeConfig(opaqueContent: string): Record<string, unknown> {
+  let config: Record<string, unknown>;
+  try {
+    config = JSON.parse(opaqueContent);
+  } catch {
+    return {};
+  }
+  const result: Record<string, unknown> = {};
+  if (typeof config.model === 'string') result.model = config.model;
+  if (config.permissions && typeof config.permissions === 'object') result.permissions = config.permissions;
+  // Legacy mcpServers inside an opaque config map through the same translation
+  // into the documented `mcp` key.
+  if (config.mcpServers && typeof config.mcpServers === 'object') {
+    const servers: Record<string, unknown> = {};
+    for (const [name, server] of Object.entries(config.mcpServers as Record<string, unknown>)) {
+      if (server && typeof server === 'object') servers[name] = translateMcpServer(server as Record<string, unknown>);
+    }
+    result.mcp = { ...((result.mcp as Record<string, unknown>) ?? {}), ...servers };
+  }
+  return result;
 }
 
 export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
   const files: TargetFile[] = [];
   const openCodeConfig: Record<string, unknown> = {};
   const mcpServers: Record<string, unknown> = {};
-  let hasSettings = false;
 
   // First pass: collect all config and MCP servers
   for (const r of resources) {
     if (r.type === 'opaque' && r.content) {
       // Scanners normalize opaque content to plain JSON (TOML/JSONC included),
       // so parseability — not the filename — decides what maps.
-      try {
-        Object.assign(openCodeConfig, buildOpenCodeConfig(JSON.parse(r.content)));
-        hasSettings = true;
-      } catch { /* invalid JSON, skip */ }
+      Object.assign(openCodeConfig, buildOpenCodeConfig(r.content));
     } else if (r.type === 'mcpServers' && r.content) {
-      // MCP from dedicated mcpServers resources
       try {
         const serverConfig = JSON.parse(r.content);
         mcpServers[r.name] = translateMcpServer(serverConfig);
@@ -46,13 +69,13 @@ export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
     }
   }
 
-  // Add translated MCP servers to config
+  // Add translated MCP servers to config under the documented `mcp` key
   if (Object.keys(mcpServers).length > 0) {
-    openCodeConfig.mcpServers = mcpServers;
+    openCodeConfig.mcp = { ...((openCodeConfig.mcp as Record<string, unknown>) ?? {}), ...mcpServers };
   }
 
   // Write opencode.json if we have anything to write
-  if (hasSettings || Object.keys(mcpServers).length > 0) {
+  if (Object.keys(openCodeConfig).length > 0) {
     files.push({
       path: 'opencode.json',
       content: JSON.stringify(openCodeConfig, null, 2),
