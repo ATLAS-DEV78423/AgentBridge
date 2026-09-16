@@ -103,7 +103,7 @@ switch (command) {
     break;
   }
   case 'fix': {
-    executeFix(positional()(0) || '.').catch(err => { console.error('Error:', err.message); process.exit(1); });
+    executeFix(positional()(0) || '.', args.includes('--dry-run')).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'migrate-all': {

@@ -63,7 +63,7 @@ agent-migrate migrate-all claude-code .
 | `apply ... --dry-run` | Preview without writing |
 | `migrate-all <source> [path]` | Sync to every other detected agent |
 | `doctor [path]` | Validate detected agent configs against their documented schemas (exit 1 on errors) |
-| `fix [path]` | Apply safe auto-fixes with backup — e.g. strip comments from a strict-JSON config |
+| `fix [path] [--dry-run]` | Apply safe auto-fixes with backup — e.g. strip comments from a strict-JSON config. `--dry-run` previews before/after without writing |
 | `rollback <path> <migration-id>` | Restore from backup |
 
 ## Supported agents

@@ -20,6 +20,34 @@ const write = (rel: string, content: string) =>
     .then(() => fs.writeFile(path.join(tmpDir, rel), content));
 
 describe('fixProject (safe auto-fixes only)', () => {
+  it('dry-run: reports planned changes without writing anything and without a transaction', async () => {
+    await write('AGENTS.md', '# Rules');
+    await write('.gemini/settings.json', JSON.stringify({ mcpServers: {} }));
+    const commented = '{\n  // hand-added\n  "model": "m",\n}';
+    await write('.claude/settings.json', commented);
+    await write('GEMINI.md', '# stale gemini rules');
+
+    const { txId, fixes, changes } = await fixProject(tmpDir, { dryRun: true });
+
+    expect(txId).toBeNull();
+    expect(changes).toEqual([
+      { file: '.claude/settings.json', kind: 'rewrite-comment-free', before: commented, after: JSON.stringify({ model: 'm' }, null, 2) + '\n' },
+      { file: 'GEMINI.md', kind: 'sync-from-AGENTS.md', before: '# stale gemini rules', after: '# Rules' },
+    ]);
+
+    // nothing was written
+    expect(await fs.readFile(path.join(tmpDir, '.claude/settings.json'), 'utf-8')).toBe(commented);
+    expect(await fs.readFile(path.join(tmpDir, 'GEMINI.md'), 'utf-8')).toBe('# stale gemini rules');
+  });
+
+  it('dry-run: empty changes on a clean project', async () => {
+    await write('AGENTS.md', '# Rules');
+    await fs.mkdir(path.join(tmpDir, '.claude'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, '.claude/settings.json'), JSON.stringify({ model: 'm' }));
+    const { changes, txId } = await fixProject(tmpDir, { dryRun: true });
+    expect(changes).toEqual([]);
+    expect(txId).toBeNull();
+  });
   it('rewrites a commented .json config comment-free, in place, with a backup', async () => {
     await write('AGENTS.md', '# Rules');
     const commented = '{\n  // hand-added\n  "model": "m",\n}';

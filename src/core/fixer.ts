@@ -20,49 +20,78 @@ import { createTransaction, applyTransaction, Transaction, TransactionOperation 
  * type, wrong MCP key shapes, unparseable files) changes behavior, so a
  * human decides those.
  */
-export async function fixProject(projectPath: string): Promise<{ txId: string | null; fixes: string[] }> {
+export type PlannedChange = {
+  file: string;
+  kind: 'rewrite-comment-free' | 'sync-from-AGENTS.md';
+  before: string;
+  after: string;
+};
+
+export async function fixProject(
+  projectPath: string,
+  opts: { dryRun?: boolean } = {},
+): Promise<{ txId: string | null; fixes: string[]; changes: PlannedChange[] }> {
   const reports = await doctor(projectPath);
-  const ops: TransactionOperation[] = [];
+  const planned: { op: TransactionOperation; kind: PlannedChange['kind']; before: string }[] = [];
+
+  const readFile = (rel: string) =>
+    fs.readFile(path.join(projectPath, rel), 'utf-8').catch(() => null);
 
   for (const report of reports) {
     for (const problem of report.problems) {
       // 1. Commented strict-JSON config → rewrite comment-free in place.
       if (problem.message.includes('comments or trailing commas')) {
-        const fullPath = path.join(projectPath, problem.file);
-        let raw: string;
-        try {
-          raw = await fs.readFile(fullPath, 'utf-8');
-        } catch { continue; }
+        const raw = await readFile(problem.file);
+        if (raw === null) continue;
 
         let doc: unknown;
         try {
           doc = parseJsonc(raw);
         } catch { continue; } // not actually comment-fixable — leave it
 
-        ops.push({ type: 'create', targetPath: problem.file, content: JSON.stringify(doc, null, 2) + '\n' });
+        planned.push({
+          op: { type: 'create', targetPath: problem.file, content: JSON.stringify(doc, null, 2) + '\n' },
+          kind: 'rewrite-comment-free',
+          before: raw,
+        });
         continue;
       }
 
       // 2. Divergent project instructions → sync from AGENTS.md.
       if (report.agent === 'project' && problem.message.includes('instruction files diverge')) {
-        let source: string;
-        try {
-          source = await fs.readFile(path.join(projectPath, 'AGENTS.md'), 'utf-8');
-        } catch { continue; } // no AGENTS.md to sync from — human decides
+        const source = await readFile('AGENTS.md');
+        if (source === null) continue; // no AGENTS.md to sync from — human decides
 
         const diverged = problem.message.match(/AGENTS\.md and ([\w./-]+) differ/);
         if (!diverged) continue;
         const target = diverged[1];
-        const already = ops.find(o => o.targetPath === target);
-        if (already) continue;
-        ops.push({ type: 'create', targetPath: target, content: source });
+        if (planned.some(p => p.op.targetPath === target)) continue;
+
+        const before = await readFile(target);
+        if (before === null) continue;
+        planned.push({
+          op: { type: 'create', targetPath: target, content: source },
+          kind: 'sync-from-AGENTS.md',
+          before,
+        });
       }
     }
   }
 
-  if (ops.length === 0) return { txId: null, fixes: [] };
+  if (planned.length === 0) return { txId: null, fixes: [], changes: [] };
 
-  const tx: Transaction = createTransaction(ops);
+  const changes: PlannedChange[] = planned.map(p => ({
+    file: p.op.targetPath,
+    kind: p.kind,
+    before: p.before,
+    after: p.op.content,
+  }));
+
+  if (opts.dryRun) {
+    return { txId: null, fixes: planned.map(p => p.op.targetPath), changes };
+  }
+
+  const tx: Transaction = createTransaction(planned.map(p => p.op));
   await applyTransaction(tx, projectPath);
-  return { txId: tx.id, fixes: ops.map(o => o.targetPath) };
+  return { txId: tx.id, fixes: planned.map(p => p.op.targetPath), changes };
 }
