@@ -1,14 +1,12 @@
 import { adapters } from '../../adapters/registry.js';
 import { flattenBundle, planMigration } from '../../core/pipeline.js';
+import { requireAgent } from './plan.js';
 
 export async function executeDiff(source: string, target: string, projectPath: string): Promise<void> {
-  const sourceAdapter = adapters[source];
-  if (!sourceAdapter) {
-    console.error(`Unknown source agent: ${source}`);
-    process.exit(1);
-  }
+  requireAgent(source, 'source');
+  requireAgent(target, 'target');
 
-  const bundle = await sourceAdapter.scanProject({ root: projectPath });
+  const bundle = await adapters[source].scanProject({ root: projectPath });
   const resources = flattenBundle(bundle);
   const plan = planMigration(source, target, resources);
 

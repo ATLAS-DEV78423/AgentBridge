@@ -52,7 +52,55 @@ describe('careless-argument handling (playtest findings)', () => {
     const { code, stderr } = await runCli(['migrate', 'claude-code', 'windsurf']);
     expect(code).toBe(1);
     expect(stderr).toMatch(/windsurf/);
-    expect(stderr).toMatch(/Supported:/);
+    expect(stderr).toMatch(/Supported agents:/);
     expect(stderr).toMatch(/kilo/); // spot-check the list is the real one
+  });
+});
+
+describe('honest feedback (silent-empty findings)', () => {
+  const seedProject = async (config: string): Promise<string> => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'agentbridge-honest-'));
+    await fs.mkdir(path.join(dir, '.claude'), { recursive: true });
+    await fs.writeFile(path.join(dir, '.claude', 'settings.json'), config);
+    return dir;
+  };
+
+  it('migrate warns instead of silently dropping a corrupt source config', async () => {
+    const dir = await seedProject('{ broken json here');
+    const { code, stdout } = await runCli(['migrate', 'claude-code', 'grok', dir]);
+    expect(code).toBe(0); // the migration still completes for what it could read
+    expect(stdout).toMatch(/agent-migrate doctor/);
+    expect(stdout).toMatch(/settings\.json/);
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it('migrate on a healthy project stays free of config warnings', async () => {
+    const dir = await seedProject(JSON.stringify({ mcpServers: { fs: { command: 'npx' } } }));
+    const { stdout } = await runCli(['migrate', 'claude-code', 'grok', dir]);
+    expect(stdout).not.toMatch(/⚠/);
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it('plan validates its target against the real agent list', async () => {
+    const { code, stderr } = await runCli(['plan', 'claude-code', 'windsurf']);
+    expect(code).toBe(1);
+    expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/kilo/); // stale list had only claude-code, opencode, kilo… and was missing the rest
+  });
+
+  it('diff rejects an unknown target instead of reporting nothing to do', async () => {
+    const { code, stderr } = await runCli(['diff', 'claude-code', 'windsurf']);
+    expect(code).toBe(1);
+    expect(stderr).toMatch(/windsurf/);
+  });
+
+  it('scan shows the agent id, not just the display name', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'agentbridge-scanid-'));
+    await fs.mkdir(path.join(dir, '.claude'), { recursive: true });
+    await fs.writeFile(path.join(dir, '.claude', 'settings.json'), JSON.stringify({ mcpServers: { fs: { command: 'npx' } } }));
+    const { stdout } = await runCli(['scan', dir]);
+    expect(stdout).toMatch(/Claude Code/);
+    expect(stdout).toMatch(/claude-code/); // the id every other command requires
+    await fs.rm(dir, { recursive: true, force: true });
   });
 });

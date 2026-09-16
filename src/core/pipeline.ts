@@ -6,6 +6,7 @@ import { createTransaction, applyTransaction, TransactionOperation } from './tra
 import { getWriter, writerSupports } from './writers.js';
 import { parseJsonc } from './jsonc.js';
 import { parseToml, serializeToml } from './toml.js';
+import { doctor } from './doctor.js';
 
 /** Flatten AgentBundle's typed arrays into a single ResourceBase[] with type set from section name. */
 export function flattenBundle(bundle: AgentBundle): ResourceBase[] {
@@ -104,10 +105,10 @@ export async function migratePipeline(
   dryRun = false
 ): Promise<{ txId: string | null; fileCount: number }> {
   const sourceAdapter = adapters[source];
-  if (!sourceAdapter) throw new Error(`Unknown source agent: ${source}. Supported: claude-code, opencode, kilo, cursor, gemini, codex, copilot, crush, grok, omp, muse-code, pi`);
+  if (!sourceAdapter) throw new Error(`Unknown source agent: ${source}. Supported: ${Object.keys(adapters).join(', ')}`);
 
   const writeFn = getWriter(target);
-  if (!writeFn) throw new Error(`Unknown target agent: ${target}. Supported: claude-code, opencode, kilo, cursor, gemini, codex, copilot, crush, grok, omp, muse-code, pi`);
+  if (!writeFn) throw new Error(`Unknown target agent: ${target}. Supported: ${Object.keys(adapters).join(', ')}`);
 
   try {
     await fs.access(projectPath);
@@ -119,6 +120,20 @@ export async function migratePipeline(
   const resources = flattenBundle(bundle);
   const plan = planMigration(source, target, resources);
   const supported = plan.filter(p => p.status !== 'UNSUPPORTED');
+
+  // Surface config problems instead of silently migrating whatever parsed:
+  // a corrupt source file would otherwise drop its MCP servers with no word.
+  const reports = await doctor(projectPath);
+  const configErrors = reports
+    .flatMap(r => r.problems)
+    .filter(p => p.severity === 'error');
+  if (configErrors.length > 0) {
+    console.log(`  ⚠ ${configErrors.length} config problem(s) found — run "agent-migrate doctor" for details:`);
+    for (const p of configErrors.slice(0, 3)) {
+      console.log(`    - ${p.file}${p.line !== undefined ? `:${p.line}` : ''}: ${p.message}`);
+    }
+    if (configErrors.length > 3) console.log(`    - …and ${configErrors.length - 3} more`);
+  }
 
   console.log(`\nMigrating: ${source} → ${target}`);
   console.log(`  Supported: ${supported.length} resources`);

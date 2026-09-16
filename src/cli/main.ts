@@ -10,6 +10,7 @@ import { executeMigrate } from './commands/migrate.js';
 import { executeMigrateAll } from './commands/migrate-all.js';
 import { executeDoctor } from './commands/doctor.js';
 import { executeFix } from './commands/fix.js';
+import { requireAgent } from './commands/plan.js';
 
 // Tolerate closed pipes (agent-migrate scan | head): Node throws EPIPE on
 // pending console writes otherwise, crashing with a stack trace.
@@ -39,8 +40,6 @@ function positional(flags: string[] = ['--dry-run']): (i: number) => string | un
 
 printBanner();
 
-const KNOWN_AGENTS = 'claude-code, opencode, kilo, cursor, gemini, codex, copilot, crush, grok, omp, muse-code, pi';
-
 function fail(message: string, code: number): never {
   console.error(message);
   process.exit(code);
@@ -49,6 +48,8 @@ function fail(message: string, code: number): never {
 function checkPair(source?: string, target?: string): void {
   if (!source || !target) return; // arity handled per-command below
   if (source === target) fail(`Error: source and target are the same agent (${source}); nothing to migrate.`, 2);
+  requireAgent(source, 'source');
+  requireAgent(target, 'target');
 }
 
 switch (command) {
