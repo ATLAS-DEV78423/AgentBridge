@@ -1,6 +1,6 @@
 {
   "name": "@superdev2347832/agent-bridge",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Safely migrate AI coding agent configuration between different agents",
   "type": "module",
   "main": "dist/cli/main.js",

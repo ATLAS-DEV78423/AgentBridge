@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0] - 2026-09-16
+
+### Features
+- **Full-migration sweep** (`npm run sweep`) — seeds every source agent's real files in its own dialect (TOML for codex, command-arrays for kilo, required transport tags for crush, commented JSONC), migrates all 12×11 = 132 pairs through the real CLI into fresh dirs, and validates each result: target detected, `doctor` clean, instructions at the documented path, both MCP servers (command+env and url+headers) preserved through every dialect, source files untouched. **132/132 passing.**
+- README reflects `opencode.json[c]` (both config names supported)
+
+### Fixed
+- **OpenCode adapter now matches [OpenCode's documented schema](https://opencode.ai/docs/mcp-servers)** — the scanner reads the documented `mcp` key (legacy `mcpServers` configs still read) and normalizes the local/remote dialect (array `command` + `environment`; `url` + `headers`); the writer emits that documented dialect instead of `mcpServers` with `stdio` tags, and **remote servers are no longer dropped** (they were previously written as an invalid `{type: "stdio"}` with neither command nor url); the detector also accepts `opencode.json` — previously the tool could not detect its own writer output; `doctor` validates the documented key with the legacy key as an alias
+- **Copilot's instruction file no longer leaks into other agents** — migrating copilot → claude/codex/opencode/kilo/cursor wrote `.github/copilot-instructions.md`, which none of those agents read; instruction-name normalization now maps it to `AGENTS.md` like `GEMINI.md`/`MUSE_CODE.md`
+
+### Tests & docs
+- 203 tests (was 195); opencode fixture, writer/scanner/detection/pipeline tests pinned to the documented dialect; new opencode detection regression tests
+
 ## [1.6.0] - 2026-09-16
 
 ### Features
