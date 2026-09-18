@@ -10,8 +10,16 @@
 - **OpenCode adapter now matches [OpenCode's documented schema](https://opencode.ai/docs/mcp-servers)** — the scanner reads the documented `mcp` key (legacy `mcpServers` configs still read) and normalizes the local/remote dialect (array `command` + `environment`; `url` + `headers`); the writer emits that documented dialect instead of `mcpServers` with `stdio` tags, and **remote servers are no longer dropped** (they were previously written as an invalid `{type: "stdio"}` with neither command nor url); the detector also accepts `opencode.json` — previously the tool could not detect its own writer output; `doctor` validates the documented key with the legacy key as an alias
 - **Copilot's instruction file no longer leaks into other agents** — migrating copilot → claude/codex/opencode/kilo/cursor wrote `.github/copilot-instructions.md`, which none of those agents read; instruction-name normalization now maps it to `AGENTS.md` like `GEMINI.md`/`MUSE_CODE.md`
 
+### Refactor
+- Deleted dead surface found by a repo-wide over-engineering audit: the unused `id` field on the simple-agent writer factory (plus its six call sites) and eight adapter re-exports nothing imported
+- `fix` no longer runs `doctor` twice — `fixProject` returns the reports it already computed
+- `migrate-all` reuses the shared `requireAgent` check, so an unknown source's agent list goes to stderr and can no longer be lost when output is piped
+- `MigrationStatus` is a plain union type instead of a runtime enum (one consumer)
+- `npm run build` now cleans `dist/` first — deleted sources were leaving orphaned compiled files (`dist/core/compatibility/engine.js`, `dist/registry/rules.js`) in the published tarball
+- Release workflow now gates on `npm run typecheck` and the compiled-CLI smoke script, matching CI
+
 ### Tests & docs
-- 205 tests (was 195); opencode fixture, writer/scanner/detection/pipeline tests pinned to the documented dialect; new opencode detection regression tests. The migrate→rollback round-trip is now covered through the real CLI (created files deleted, overwritten configs restored byte-for-byte) — the undo path previously had no test at all
+- 206 tests (was 195); opencode fixture, writer/scanner/detection/pipeline tests pinned to the documented dialect; new opencode detection regression tests. The migrate→rollback round-trip is now covered through the real CLI (created files deleted, overwritten configs restored byte-for-byte) — the undo path previously had no test at all
 
 ## [1.6.0] - 2026-09-16
 
