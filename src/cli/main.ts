@@ -70,15 +70,6 @@ switch (command) {
     executeDiff(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
-  case 'apply': {
-    const p = positional();
-    const source = p(0), target = p(1), path = p(2) || '.';
-    const dryRun = args.includes('--dry-run');
-    if (!source || !target) fail('Usage: agent-migrate apply <source> <target> [path] [--dry-run]', 2);
-    checkPair(source, target);
-    executeMigrate(source, target, path, dryRun).catch(err => { console.error('Error:', err.message); process.exit(1); });
-    break;
-  }
   case 'rollback': {
     const p = positional();
     const path = p(0) || '.', migrationId = p(1);

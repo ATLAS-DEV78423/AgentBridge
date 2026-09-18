@@ -54,7 +54,14 @@ from a logged-in machine: `npm login && npm publish`.
 
    (If git complains about identity, add
    `-c user.name='ATLAS-DEV78423' -c user.email='atlas@agentbridge.dev'`
-   to the `tag`/`commit` commands — the repo has no global git identity.)
+   to the `tag`/`commit` commands — the repo has no global git identity.
+   The durable alternative is a repo-local identity, which touches nothing
+   global and makes plain `git commit` work:
+
+   ```bash
+   git config --local user.name 'ATLAS-DEV78423'
+   git config --local user.email 'atlas@agentbridge.dev'
+   ```)
 
 5. **Push and let CI publish:**
 
@@ -99,3 +106,6 @@ from a logged-in machine: `npm login && npm publish`.
 | v1.2.0 | 12 agents, 132 bidirectional migrations, merge-don't-clobber |
 | v1.3.0 | `doctor`, `fix`, CI on every push/PR, writer-derived plan/diff |
 | v1.4.0 | Instruction-file validation + divergence warnings, doctor in CI |
+| v1.5.0 | `fix` syncs divergent instruction files; doctor reports every divergence; compiled-CLI smoke in CI |
+| v1.6.0 | `fix --dry-run`; honest migrate feedback; registry-validated `plan`/`diff`; `scan` prints agent ids; EPIPE fix |
+| v1.7.0 | 132-pair full-migration sweep; OpenCode documented dialect; Copilot instruction-file normalization |

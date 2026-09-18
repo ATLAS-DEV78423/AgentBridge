@@ -7,15 +7,14 @@ import { writeOpenCodeFiles } from './opencode/writer.js';
 import { kiloAdapter } from './kilo/index.js';
 import { writeKiloFiles } from './kilo/writer.js';
 import { cursorAdapter } from './cursor/index.js';
-import { writeCursorFiles } from './cursor/writer.js';
 import { geminiAdapter } from './gemini/index.js';
-import { writeGeminiFiles } from './gemini/writer.js';
 import { codexAdapter } from './codex/index.js';
 import { writeCodexFiles } from './codex/writer.js';
 import {
   copilotAdapter, writeCopilotFiles,
   crushAdapter, writeCrushFiles,
   grokAdapter, writeGrokFiles,
+  writeGeminiFiles, writeCursorFiles,
   ompAdapter, writeOmpFiles,
   museCodeAdapter, writeMuseCodeFiles,
   piAdapter, writePiFiles,

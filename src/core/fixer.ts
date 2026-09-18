@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { doctor } from './doctor.js';
+import { doctor, DoctorAgentReport } from './doctor.js';
 import { parseJsonc } from './jsonc.js';
 import { createTransaction, applyTransaction, Transaction, TransactionOperation } from './transaction/transaction.js';
 
@@ -30,7 +30,7 @@ export type PlannedChange = {
 export async function fixProject(
   projectPath: string,
   opts: { dryRun?: boolean } = {},
-): Promise<{ txId: string | null; fixes: string[]; changes: PlannedChange[] }> {
+): Promise<{ txId: string | null; fixes: string[]; changes: PlannedChange[]; reports: DoctorAgentReport[] }> {
   const reports = await doctor(projectPath);
   const planned: { op: TransactionOperation; kind: PlannedChange['kind']; before: string }[] = [];
 
@@ -78,7 +78,7 @@ export async function fixProject(
     }
   }
 
-  if (planned.length === 0) return { txId: null, fixes: [], changes: [] };
+  if (planned.length === 0) return { txId: null, fixes: [], changes: [], reports };
 
   const changes: PlannedChange[] = planned.map(p => ({
     file: p.op.targetPath,
@@ -88,10 +88,10 @@ export async function fixProject(
   }));
 
   if (opts.dryRun) {
-    return { txId: null, fixes: planned.map(p => p.op.targetPath), changes };
+    return { txId: null, fixes: planned.map(p => p.op.targetPath), changes, reports };
   }
 
   const tx: Transaction = createTransaction(planned.map(p => p.op));
   await applyTransaction(tx, projectPath);
-  return { txId: tx.id, fixes: planned.map(p => p.op.targetPath), changes };
+  return { txId: tx.id, fixes: planned.map(p => p.op.targetPath), changes, reports };
 }

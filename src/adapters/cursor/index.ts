@@ -7,6 +7,3 @@ export const cursorAdapter: AgentAdapter = {
   detect: detectCursor,
   scanProject: scanCursorProject,
 };
-
-export { detectCursor } from './detector.js';
-export { scanCursorProject } from './scanner.js';

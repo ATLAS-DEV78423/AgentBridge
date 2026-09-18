@@ -1,6 +1,7 @@
 import { adapters } from '../../adapters/registry.js';
 import { hasWriter } from '../../core/writers.js';
 import { migratePipeline } from '../../core/pipeline.js';
+import { requireAgent } from './plan.js';
 
 export type MigrateAllResult = Record<string, { txId: string | null; fileCount: number }>;
 
@@ -9,11 +10,7 @@ export async function executeMigrateAll(
   projectPath: string,
   dryRun = false,
 ): Promise<MigrateAllResult> {
-  if (!adapters[source]) {
-    console.error(`Unknown source agent: ${source}`);
-    console.log('Supported agents: ' + Object.keys(adapters).join(', '));
-    process.exit(1);
-  }
+  requireAgent(source, 'source');
 
   const targets = (await Promise.all(
     Object.entries(adapters).map(async ([id, adapter]) => {

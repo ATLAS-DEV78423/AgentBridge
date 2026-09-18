@@ -27,8 +27,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Type check
+        run: npm run typecheck
+
       - name: Smoke-test the compiled CLI
-        run: node dist/cli/main.js doctor .
+        run: bash scripts/smoke.sh
 
       - name: Publish to npm
         run: npm publish

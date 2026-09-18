@@ -1,12 +1,11 @@
-import { doctor } from '../../core/doctor.js';
 import { fixProject } from '../../core/fixer.js';
 
 export async function executeFix(projectPath: string, dryRun = false): Promise<void> {
-  const { txId, fixes, changes } = await fixProject(projectPath, { dryRun });
+  const { txId, fixes, changes, reports } = await fixProject(projectPath, { dryRun });
 
   if (changes.length === 0) {
     // Nothing auto-fixable — surface what doctor still wants a human for.
-    const reports = await doctor(projectPath);
+    // (fixProject already ran doctor; re-running it would rescan the project.)
     const remaining = reports.flatMap(r => r.problems.map(p => `${r.agent} → ${p.file}: ${p.message}`));
     if (remaining.length === 0) {
       console.log('\nNothing to fix — all detected agent configs are OK.');

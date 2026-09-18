@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { writeGeminiFiles } from '../../../src/adapters/gemini/writer.js';
+import { writeGeminiFiles } from '../../../src/adapters/simple-agents.js';
 import { ResourceBase } from '../../../src/core/model/types.js';
 
 const inst = (name: string, content: string): ResourceBase => ({

@@ -1,8 +1,4 @@
-export enum MigrationStatus {
-  DIRECT = 'DIRECT',
-  ADAPTED = 'ADAPTED',
-  UNSUPPORTED = 'UNSUPPORTED',
-}
+export type MigrationStatus = 'DIRECT' | 'ADAPTED' | 'UNSUPPORTED';
 
 export type ResourceBase = {
   id: string;

@@ -6,6 +6,3 @@ export const codexAdapter: AgentAdapter = {
   detect: detectCodex,
   scanProject: scanCodexProject,
 };
-
-export { detectCodex } from './scanner.js';
-export { scanCodexProject } from './scanner.js';

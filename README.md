@@ -58,9 +58,7 @@ agent-migrate migrate-all claude-code .
 | `scan [path]` | Detect every agent config present (all of them, not just the first) |
 | `plan <source> <target> [path]` | Show what maps to what |
 | `diff <source> <target> [path]` | Preview file changes |
-| `migrate <source> <target> [path] [--dry-run]` | Scan + write in one step |
-| `apply <source> <target> [path]` | Same as migrate (alias) |
-| `apply ... --dry-run` | Preview without writing |
+| `migrate <source> <target> [path] [--dry-run]` | Scan + write in one step; `--dry-run` previews without writing |
 | `migrate-all <source> [path]` | Sync to every other detected agent |
 | `doctor [path]` | Validate detected agent configs against their documented schemas (exit 1 on errors) |
 | `fix [path] [--dry-run]` | Apply safe auto-fixes with backup — e.g. strip comments from a strict-JSON config. `--dry-run` previews before/after without writing |

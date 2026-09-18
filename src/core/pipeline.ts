@@ -91,8 +91,8 @@ export function planMigration(source: string, target: string, resources: Resourc
     return {
       resource,
       status: !supported
-        ? MigrationStatus.UNSUPPORTED
-        : resource.type === 'instructions' ? MigrationStatus.DIRECT : MigrationStatus.ADAPTED,
+        ? 'UNSUPPORTED'
+        : resource.type === 'instructions' ? 'DIRECT' : 'ADAPTED',
       method: resource.type === 'instructions' ? 'copy' : 'rewrite',
     };
   });
@@ -105,10 +105,10 @@ export async function migratePipeline(
   dryRun = false
 ): Promise<{ txId: string | null; fileCount: number }> {
   const sourceAdapter = adapters[source];
-  if (!sourceAdapter) throw new Error(`Unknown source agent: ${source}. Supported: ${Object.keys(adapters).join(', ')}`);
+  if (!sourceAdapter) throw new Error(`Unknown source agent: ${source}. Supported agents: ${Object.keys(adapters).join(', ')}`);
 
   const writeFn = getWriter(target);
-  if (!writeFn) throw new Error(`Unknown target agent: ${target}. Supported: ${Object.keys(adapters).join(', ')}`);
+  if (!writeFn) throw new Error(`Unknown target agent: ${target}. Supported agents: ${Object.keys(adapters).join(', ')}`);
 
   try {
     await fs.access(projectPath);

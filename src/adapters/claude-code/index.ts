@@ -7,6 +7,3 @@ export const claudeAdapter: AgentAdapter = {
   detect: detectClaude,
   scanProject: scanClaudeProject
 };
-
-export { detectClaude } from './detector.js';
-export { scanClaudeProject } from './scanner.js';

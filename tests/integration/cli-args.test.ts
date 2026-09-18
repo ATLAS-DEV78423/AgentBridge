@@ -37,7 +37,15 @@ describe('careless-argument handling (playtest findings)', () => {
     const { code, stderr } = await runCli(['migrate', 'claude-code', 'windsurf']);
     expect(code).toBe(1);
     expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/Supported agents:/);
     expect(stderr).toMatch(/kilo/); // the list is the real, registry-derived one
+  });
+
+  it('migrate-all rejects an unknown source with the agent list on stderr', async () => {
+    const { code, stderr } = await runCli(['migrate-all', 'windsurf']);
+    expect(code).toBe(1);
+    expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/kilo/); // registry-derived list, on stderr so a pipe can't drop it
   });
 });
 

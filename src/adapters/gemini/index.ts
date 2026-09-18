@@ -7,6 +7,3 @@ export const geminiAdapter: AgentAdapter = {
   detect: detectGemini,
   scanProject: scanGeminiProject,
 };
-
-export { detectGemini } from './detector.js';
-export { scanGeminiProject } from './scanner.js';

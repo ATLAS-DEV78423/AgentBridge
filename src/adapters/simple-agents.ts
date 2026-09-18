@@ -85,7 +85,6 @@ export function makeJsonAgent(spec: SimpleAgentSpec): AgentAdapter {
  * replaced with `remoteType` when the agent's docs require an explicit one.
  */
 export function makeJsonWriter(spec: {
-  id: string;
   marker: string;
   mcpKey: string | null;
   instructionFile: string | null;
@@ -126,22 +125,30 @@ export function makeJsonWriter(spec: {
 }
 
 export const copilotAdapter = makeJsonAgent({ id: 'copilot', marker: '.copilot/mcp-config.json', mcpKey: 'mcpServers', instructionFile: '.github/copilot-instructions.md' });
-export const writeCopilotFiles = makeJsonWriter({ id: 'copilot', marker: '.copilot/mcp-config.json', mcpKey: 'mcpServers', instructionFile: '.github/copilot-instructions.md' });
+export const writeCopilotFiles = makeJsonWriter({ marker: '.copilot/mcp-config.json', mcpKey: 'mcpServers', instructionFile: '.github/copilot-instructions.md' });
 
 export const crushAdapter = makeJsonAgent({ id: 'crush', marker: '.crush.json', mcpKey: 'mcp', instructionFile: 'AGENTS.md' });
-export const writeCrushFiles = makeJsonWriter({ id: 'crush', marker: '.crush.json', mcpKey: 'mcp', instructionFile: 'AGENTS.md', remoteType: 'http', stdioType: 'stdio' });
+export const writeCrushFiles = makeJsonWriter({ marker: '.crush.json', mcpKey: 'mcp', instructionFile: 'AGENTS.md', remoteType: 'http', stdioType: 'stdio' });
 
 export const grokAdapter = makeJsonAgent({ id: 'grok', marker: '.mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });
-export const writeGrokFiles = makeJsonWriter({ id: 'grok', marker: '.mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });
+export const writeGrokFiles = makeJsonWriter({ marker: '.mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });
+
+// Gemini CLI's schema is exactly the factory defaults: transport inferred from
+// shape (explicit type stripped), GEMINI.md instructions, mcpServers key.
+export const writeGeminiFiles = makeJsonWriter({ marker: '.gemini/settings.json', mcpKey: 'mcpServers', instructionFile: 'GEMINI.md' });
+
+// Cursor requires type: "stdio" on command-based servers (cursor.com/docs);
+// remote url entries pass through, which is the factory's remote default.
+export const writeCursorFiles = makeJsonWriter({ marker: '.cursor/mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md', stdioType: 'stdio' });
 
 export const ompAdapter = makeJsonAgent({ id: 'omp', marker: '.pi/mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });
-export const writeOmpFiles = makeJsonWriter({ id: 'omp', marker: '.pi/mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });
+export const writeOmpFiles = makeJsonWriter({ marker: '.pi/mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });
 
 export const museCodeAdapter = makeJsonAgent({ id: 'muse-code', marker: 'MUSE_CODE.md', mcpKey: null, instructionFile: 'MUSE_CODE.md' });
-export const writeMuseCodeFiles = makeJsonWriter({ id: 'muse-code', marker: 'MUSE_CODE.md', mcpKey: null, instructionFile: 'MUSE_CODE.md' });
+export const writeMuseCodeFiles = makeJsonWriter({ marker: 'MUSE_CODE.md', mcpKey: null, instructionFile: 'MUSE_CODE.md' });
 
 // Vanilla Pi reads AGENTS.md (pi.dev docs) but documents no project-scoped
 // MCP config; `.pi/` is the oh-my-pi (omp) config dir, so a bare `.pi`
 // directory is Pi's presence marker without claiming omp's config format.
 export const piAdapter = makeJsonAgent({ id: 'pi', marker: '.pi', mcpKey: null, instructionFile: 'AGENTS.md' });
-export const writePiFiles = makeJsonWriter({ id: 'pi', marker: '.pi', mcpKey: null, instructionFile: 'AGENTS.md' });
+export const writePiFiles = makeJsonWriter({ marker: '.pi', mcpKey: null, instructionFile: 'AGENTS.md' });
