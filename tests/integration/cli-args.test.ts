@@ -47,6 +47,13 @@ describe('careless-argument handling (playtest findings)', () => {
     expect(stderr).toMatch(/windsurf/);
     expect(stderr).toMatch(/kilo/); // registry-derived list, on stderr so a pipe can't drop it
   });
+
+  it('help works as a bare subcommand, not just a flag', async () => {
+    const { code, stdout } = await runCli(['help']);
+    expect(code).toBe(0);
+    expect(stdout).toMatch(/Commands:/);
+    expect(stdout).not.toMatch(/Unknown command/);
+  });
 });
 
 describe('honest feedback (silent-empty findings)', () => {

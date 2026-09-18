@@ -10,7 +10,6 @@ Commands:
   plan <source> <target> [path]   Show migration compatibility report
   diff <source> <target> [path]   Preview file changes
   migrate <source> <target> [path] [--dry-run]
-  migrate <source> <target> [path] [--dry-run]
                                   Scan → plan → write in one step
   migrate-all <source> [path]     Sync source config to every other detected agent
   doctor [path]                   Validate detected agent configs against their schemas

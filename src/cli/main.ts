@@ -102,6 +102,9 @@ switch (command) {
     executeMigrateAll(source, path, dryRun).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
+  case 'help':
+    showHelp();
+    break;
   default:
     fail(`Unknown command: ${command}\nRun "agent-migrate --help" for usage.`, 2);
 }
