@@ -11,7 +11,7 @@
 - **Copilot's instruction file no longer leaks into other agents** — migrating copilot → claude/codex/opencode/kilo/cursor wrote `.github/copilot-instructions.md`, which none of those agents read; instruction-name normalization now maps it to `AGENTS.md` like `GEMINI.md`/`MUSE_CODE.md`
 
 ### Tests & docs
-- 203 tests (was 195); opencode fixture, writer/scanner/detection/pipeline tests pinned to the documented dialect; new opencode detection regression tests
+- 205 tests (was 195); opencode fixture, writer/scanner/detection/pipeline tests pinned to the documented dialect; new opencode detection regression tests. The migrate→rollback round-trip is now covered through the real CLI (created files deleted, overwritten configs restored byte-for-byte) — the undo path previously had no test at all
 
 ## [1.6.0] - 2026-09-16
 

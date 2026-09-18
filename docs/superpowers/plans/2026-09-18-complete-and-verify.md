@@ -98,7 +98,9 @@ async function runCli(args: string[]): Promise<{ code: number; stdout: string; s
 function txIdOf(stdout: string): string {
   const match = stdout.match(/\.agentbridge\/backups\/([0-9a-f-]{36})/);
   if (!match) throw new Error(`no migration id in output:\n${stdout}`);
-```typescript
+  return match[1];
+}
+
 describe('cli rollback', () => {
   it('undoes a migration: deletes created files, restores overwritten ones byte-for-byte', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'agentbridge-rollback-'));
@@ -144,9 +146,7 @@ describe('cli rollback', () => {
   });
 });
 ```
-  return match[1];
-}
-```
+
 - [ ] **Step 2: Run the test**
 
 Run: `npx vitest run tests/integration/cli-rollback.test.ts`
