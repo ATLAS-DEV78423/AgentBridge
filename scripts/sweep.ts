@@ -114,18 +114,22 @@ async function seed(dir: string, source: Agent): Promise<void> {
 
 /** The files the source scan reads — must be byte-identical after migrating away. */
 async function sourceFiles(dir: string, source: Agent): Promise<string[]> {
+  const configs: Partial<Record<Agent, string>> = {
+    'claude-code': '.claude/settings.json',
+    'opencode': 'opencode.jsonc',
+    'kilo': '.kilo/kilo.jsonc',
+    'cursor': '.cursor/mcp.json',
+    'gemini': '.gemini/settings.json',
+    'codex': '.codex/config.toml',
+    'copilot': '.copilot/mcp-config.json',
+    'crush': '.crush.json',
+    'grok': '.mcp.json',
+    'omp': '.pi/mcp.json',
+    // muse-code & pi: no separate config file (marker IS the doc / bare dir)
+  };
   const files = [INSTRUCTION_FILE[source]];
-  if (source === 'claude-code') files.push('.claude/settings.json');
-  if (source === 'opencode') files.push('opencode.jsonc');
-  if (source === 'kilo') files.push('.kilo/kilo.jsonc');
-  if (source === 'cursor') files.push('.cursor/mcp.json');
-  if (source === 'gemini') files.push('.gemini/settings.json');
-  if (source === 'codex') files.push('.codex/config.toml');
-  if (source === 'copilot') files.push('.copilot/mcp-config.json');
-  if (source === 'crush') files.push('.crush.json');
-  if (source === 'grok') files.push('.mcp.json');
-  if (source === 'omp') files.push('.pi/mcp.json');
-  if (source === 'muse-code') files.push('MUSE_CODE.md');
+  const config = configs[source];
+  if (config) files.push(config);
   if (source === 'pi') files.push('.pi'); // dir marker; contents unchecked
   return files;
 }
@@ -169,8 +173,9 @@ async function main(): Promise<number> {
         };
         const sourceHasMcp = HAS_MCP[source] !== false;
 
-        // 1. target detected — except pi (whose marker is a bare .pi dir no
-        //    writer creates) and instructions-only migrations.
+        // 1. target detected — pi's marker is a bare .pi dir no writer
+        //    creates, and instructions-only migrations (muse-code, pi as
+        //    source) create no config marker at all.
         const scan = await cli(['scan', dir]);
         if (target !== 'pi' && sourceHasMcp && (scan.code !== 0 || !scan.out.includes(`(id: ${target})`))) {
           problems.push(`target ${target} not detected after migrate`);
