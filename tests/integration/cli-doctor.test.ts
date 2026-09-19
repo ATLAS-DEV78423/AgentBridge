@@ -2,10 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const run = promisify(execFile);
+import { runCli } from './run-cli';
 
 describe('cli doctor', () => {
   it('exits 0 and reports OK on a healthy project', async () => {
@@ -13,7 +10,7 @@ describe('cli doctor', () => {
     await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), '# Rules');
     await fs.writeFile(path.join(tmpDir, '.mcp.json'), JSON.stringify({ mcpServers: { fs: { command: 'npx', args: ['-y', 'fs'] } } }));
 
-    const { stdout } = await run('npx', ['tsx', 'src/cli/main.ts', 'doctor', tmpDir], { cwd: path.resolve('.') });
+    const { stdout } = await runCli(['doctor', tmpDir]);
     expect(stdout).toContain('grok');
     expect(stdout).toContain('config OK');
     expect(stdout).toContain('0 error(s)');
@@ -28,17 +25,10 @@ describe('cli doctor', () => {
       await fs.writeFile(path.join(tmpDir, '.claude', 'settings.json'), '{ "model": "m", }');
     });
 
-    let failed: { code: number; stdout: string } | undefined;
-    try {
-      await run('npx', ['tsx', 'src/cli/main.ts', 'doctor', tmpDir], { cwd: path.resolve('.') });
-    } catch (err: unknown) {
-      const e = err as { code: number; stdout: string };
-      failed = { code: e.code, stdout: e.stdout };
-    }
+    const failed = await runCli(['doctor', tmpDir]);
 
-    expect(failed).toBeDefined();
-    expect(failed!.code).toBe(1);
-    expect(failed!.stdout).toContain('.claude/settings.json');
+    expect(failed.code).toBe(1);
+    expect(failed.stdout).toContain('.claude/settings.json');
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 });

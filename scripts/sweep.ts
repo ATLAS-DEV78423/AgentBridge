@@ -19,9 +19,13 @@ import path from 'node:path';
 import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createRequire } from 'node:module';
 
 const run = promisify(execFile);
-const CLI = ['npx', 'tsx', 'src/cli/main.ts'];
+// `npx` is a .cmd shim on Windows and Node refuses to spawn .cmd without a
+// shell (CVE-2024-27980 hardening); run tsx's real entry via node, which is
+// what `npx tsx` resolves to anyway.
+const CLI = [process.execPath, createRequire(import.meta.url).resolve('tsx/cli'), 'src/cli/main.ts'];
 
 const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi'] as const;
 type Agent = (typeof AGENTS)[number];

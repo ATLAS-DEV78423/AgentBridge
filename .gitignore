@@ -4,3 +4,7 @@ graphify-out/
 
 # agent-migrate backup transactions (rollback data, not source)
 .agentbridge/
+
+# local assistant memory (tool state, not source)
+.workbuddy-ai/
+

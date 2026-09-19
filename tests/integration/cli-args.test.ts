@@ -2,22 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const run = promisify(execFile);
-const CLI = ['npx', 'tsx', 'src/cli/main.ts'];
-const repo = path.resolve('.');
-
-async function runCli(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
-  try {
-    const { stdout, stderr } = await run(CLI[0], [...CLI.slice(1), ...args], { cwd: repo });
-    return { code: 0, stdout, stderr };
-  } catch (err: unknown) {
-    const e = err as { code: number; stdout: string; stderr: string };
-    return { code: e.code, stdout: e.stdout, stderr: e.stderr };
-  }
-}
+import { runCli } from './run-cli';
 
 describe('careless-argument handling (playtest findings)', () => {
   it('migrate --dry-run before the path is a flag, not a directory', async () => {

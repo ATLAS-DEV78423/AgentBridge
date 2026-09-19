@@ -2,10 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const run = promisify(execFile);
+import { runCli } from './run-cli';
 
 describe('cli migrate --dry-run', () => {
   it('plans the migration without writing target files (flag must not be dropped)', async () => {
@@ -14,7 +11,7 @@ describe('cli migrate --dry-run', () => {
     await fs.mkdir(path.join(tmpDir, '.claude'), { recursive: true });
     await fs.writeFile(path.join(tmpDir, '.claude', 'settings.json'), JSON.stringify({ mcpServers: { fs: { command: 'npx', args: ['-y', 'fs'] } } }));
 
-    const { stdout } = await run('npx', ['tsx', 'src/cli/main.ts', 'migrate', 'claude-code', 'grok', tmpDir, '--dry-run'], { cwd: path.resolve('.') });
+    const { stdout } = await runCli(['migrate', 'claude-code', 'grok', tmpDir, '--dry-run']);
 
     expect(stdout).toContain('Dry run');
     // dry-run must not create the target config
