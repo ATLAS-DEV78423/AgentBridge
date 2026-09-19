@@ -1,5 +1,22 @@
 # Changelog
 
+
+## [1.7.1] - 2026-09-19
+
+### Fixed
+- `agent-migrate help` now works as a bare subcommand (previously only the `--help` flag did), and the help text no longer duplicates the `migrate` line
+
+### Refactor
+- Deleted dead surface found by a repo-wide over-engineering audit: the unused `id` field on the simple-agent writer factory (plus its six call sites) and eight adapter re-exports nothing imported
+- `fix` no longer runs `doctor` twice — `fixProject` returns the reports it already computed
+- `migrate-all` reuses the shared `requireAgent` check, so an unknown source's agent list goes to stderr and can no longer be lost when output is piped
+- `MigrationStatus` is a plain union type instead of a runtime enum (one consumer)
+- `npm run build` now cleans `dist/` first — deleted sources were leaving orphaned compiled files (`dist/core/compatibility/engine.js`, `dist/registry/rules.js`) in the published tarball
+- Release workflow now gates on `npm run typecheck` and the compiled-CLI smoke script, matching CI
+
+### Tests & docs
+- 207 tests (was 195); the migrate→rollback round-trip is now covered through the real CLI (created files deleted, overwritten configs restored byte-for-byte) — the undo path previously had no test at all; `help` as a bare subcommand is pinned by a test
+
 ## [1.7.0] - 2026-09-16
 
 ### Features
