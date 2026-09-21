@@ -7,7 +7,7 @@ import { ResourceBase } from '../../../src/core/model/types.js';
 
 const AGENTS = [
   'claude-code', 'opencode', 'kilo', 'cursor', 'gemini',
-  'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi',
+  'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline',
 ] as const;
 
 // A representative opaque config per source agent — what "model settings" means there.

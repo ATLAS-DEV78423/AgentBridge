@@ -18,6 +18,7 @@ import {
   ompAdapter, writeOmpFiles,
   museCodeAdapter, writeMuseCodeFiles,
   piAdapter, writePiFiles,
+  clineAdapter, writeClineFiles,
 } from './simple-agents.js';
 
 /**
@@ -39,6 +40,7 @@ const AGENT_REGISTRATIONS: [string, AgentAdapter, (resources: Parameters<Paramet
   ['omp', ompAdapter, writeOmpFiles],
   ['muse-code', museCodeAdapter, writeMuseCodeFiles],
   ['pi', piAdapter, writePiFiles],
+  ['cline', clineAdapter, writeClineFiles],
 ];
 
 export const adapters: Record<string, AgentAdapter> = {};

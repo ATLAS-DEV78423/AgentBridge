@@ -29,6 +29,7 @@ Supported agents:
   omp                             Oh My Pi (source & target)
   muse-code                       Muse Code (instructions only)
   pi                              Pi (instructions only)
+  cline                           Cline (instructions only)
 `;
 
 export function showHelp(): void {

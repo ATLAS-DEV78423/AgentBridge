@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { copilotAdapter, writeCopilotFiles, crushAdapter, writeCrushFiles, grokAdapter, writeGrokFiles, ompAdapter, writeOmpFiles, museCodeAdapter, writeMuseCodeFiles, piAdapter, writePiFiles, instructionsTarget } from '../../../src/adapters/simple-agents.js';
+import { copilotAdapter, writeCopilotFiles, crushAdapter, writeCrushFiles, grokAdapter, writeGrokFiles, ompAdapter, writeOmpFiles, museCodeAdapter, writeMuseCodeFiles, piAdapter, writePiFiles, clineAdapter, writeClineFiles, instructionsTarget } from '../../../src/adapters/simple-agents.js';
 import { AgentAdapter } from '../../../src/core/scanner/scanner.js';
 import { TargetFile } from '../../../src/core/writers.js';
 
@@ -33,6 +33,9 @@ const CASES: {
   { id: 'omp', adapter: ompAdapter, write: writeOmpFiles, marker: '.pi/mcp.json', mcpKey: 'mcpServers', instructionFile: null },
   { id: 'muse-code', adapter: museCodeAdapter, write: writeMuseCodeFiles, marker: 'MUSE_CODE.md', mcpKey: null, instructionFile: 'MUSE_CODE.md' },
   { id: 'pi', adapter: piAdapter, write: writePiFiles, marker: '.pi', mcpKey: null, instructionFile: 'AGENTS.md' },
+  // Cline's marker is a rules location, not a config file: `.clinerules` or
+  // `.cline/rules` — the array's first entry is what this case exercises.
+  { id: 'cline', adapter: clineAdapter, write: writeClineFiles, marker: '.clinerules', mcpKey: null, instructionFile: 'AGENTS.md' },
 ];
 
 const stdioServer = { type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', '.'], env: { K: 'v' } };
@@ -109,6 +112,24 @@ describe.each(CASES)('$id adapter (factory)', ({ adapter, write, marker, mcpKey,
       expect(bundle.instructions).toHaveLength(0);
     });
   }
+});
+
+describe('cline detection', () => {
+  // docs.cline.bot/customization/cline-rules: workspace rules live in
+  // `.clinerules/` or `.cline/rules/`; there is no project-scoped MCP file
+  // (MCP settings are user-level), so the rules location is the marker.
+  it('detects either documented workspace rules location', async () => {
+    for (const rel of ['.clinerules/coding.md', path.join('.cline', 'rules', 'coding.md')]) {
+      const root = await fs.mkdtemp(path.join(os.tmpdir(), 'agentbridge-cline-'));
+      await fs.mkdir(path.dirname(path.join(root, rel)), { recursive: true });
+      await fs.writeFile(path.join(root, rel), '# Rules');
+      try {
+        expect(await clineAdapter.detect({ root }), rel).toEqual({ detected: true, agent: 'cline' });
+      } finally {
+        await fs.rm(root, { recursive: true, force: true });
+      }
+    }
+  });
 });
 
 describe('factory per-agent differences', () => {

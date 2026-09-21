@@ -2,7 +2,7 @@
  * Full-migration sweep: every supported source agent migrated to every
  * other supported agent, through the real CLI, then doctor-validated.
  *
- * For each of the 12×11 pairs, a fresh temp dir is seeded with ONLY the
+ * For each of the 13×12 pairs, a fresh temp dir is seeded with ONLY the
  * source's files (marker config with two MCP servers — one command-based
  * with env, one url-based — plus the agent's instruction file), migrated,
  * and the result is checked:
@@ -27,7 +27,7 @@ const run = promisify(execFile);
 // what `npx tsx` resolves to anyway.
 const CLI = [process.execPath, createRequire(import.meta.url).resolve('tsx/cli'), 'src/cli/main.ts'];
 
-const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi'] as const;
+const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline'] as const;
 type Agent = (typeof AGENTS)[number];
 
 /** The instruction file each agent reads (mirrors the scanners). */
@@ -44,6 +44,7 @@ const INSTRUCTION_FILE: Record<Agent, string> = {
   'omp': 'AGENTS.md',
   'muse-code': 'MUSE_CODE.md',
   'pi': 'AGENTS.md',
+  'cline': 'AGENTS.md',
 };
 
 const RULES = '# Shared project rules\n- Keep changes minimal.\n';
@@ -109,6 +110,10 @@ async function seed(dir: string, source: Agent): Promise<void> {
       await write('AGENTS.md', RULES);
       await fs.mkdir(path.join(dir, '.pi'));
       break;
+    case 'cline': // rules dir is the marker; MCP settings are user-level
+      await write('AGENTS.md', RULES);
+      await write('.clinerules/coding.md', RULES);
+      break;
   }
 }
 
@@ -125,7 +130,8 @@ async function sourceFiles(dir: string, source: Agent): Promise<string[]> {
     'crush': '.crush.json',
     'grok': '.mcp.json',
     'omp': '.pi/mcp.json',
-    // muse-code & pi: no separate config file (marker IS the doc / bare dir)
+    // muse-code & pi & cline: no separate config file (marker IS the doc /
+    // a bare dir / a rules directory)
   };
   const files = [INSTRUCTION_FILE[source]];
   const config = configs[source];
@@ -165,19 +171,21 @@ async function main(): Promise<number> {
       if (mig.code !== 0) problems.push(`migrate exit ${mig.code}: ${mig.err.split('\n')[0]}`);
 
       if (problems.length === 0) {
-        // muse-code and pi have no project MCP config: migrations FROM them
-        // are instructions-only, so no target config marker is created and
+        // muse-code, pi and cline have no project MCP config: migrations FROM
+        // them are instructions-only, so no target config marker is created and
         // marker-based detection legitimately stays silent afterwards.
         const HAS_MCP: Partial<Record<Agent, boolean>> = {
-          'muse-code': false, 'pi': false,
+          'muse-code': false, 'pi': false, 'cline': false,
         };
         const sourceHasMcp = HAS_MCP[source] !== false;
 
         // 1. target detected — pi's marker is a bare .pi dir no writer
-        //    creates, and instructions-only migrations (muse-code, pi as
-        //    source) create no config marker at all.
+        //    creates, cline's is a rules dir (migrating into cline writes
+        //    AGENTS.md only), and instructions-only migrations (muse-code,
+        //    pi, cline as source) create no config marker at all.
+        const MARKERLESS_TARGETS: Partial<Record<Agent, boolean>> = { 'pi': true, 'cline': true };
         const scan = await cli(['scan', dir]);
-        if (target !== 'pi' && sourceHasMcp && (scan.code !== 0 || !scan.out.includes(`(id: ${target})`))) {
+        if (!MARKERLESS_TARGETS[target] && sourceHasMcp && (scan.code !== 0 || !scan.out.includes(`(id: ${target})`))) {
           problems.push(`target ${target} not detected after migrate`);
         }
 
@@ -207,6 +215,7 @@ async function main(): Promise<number> {
             'omp': ['.pi/mcp.json'],
             'muse-code': [],
             'pi': [],
+            'cline': [],
           };
           const texts = (await Promise.all(
             targetConfigs[target].map(rel => fs.readFile(path.join(dir, rel), 'utf-8').catch(() => '')),

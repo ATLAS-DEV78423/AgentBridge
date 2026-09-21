@@ -5,7 +5,7 @@ import { ResourceBase } from '../../../src/core/model/types.js';
 
 const AGENTS = [
   'claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex',
-  'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi',
+  'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline',
 ];
 
 const res = (type: string, name: string, content = 'x'): ResourceBase =>
@@ -25,9 +25,10 @@ describe('writerSupports (plan derives status from the real writer)', () => {
     for (const target of ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex', 'copilot', 'crush', 'grok', 'omp']) {
       expect(writerSupports(target, mcp), target).toBe(true);
     }
-    // muse-code and pi document no project-scoped MCP config.
-    expect(writerSupports('muse-code', mcp)).toBe(false);
-    expect(writerSupports('pi', mcp)).toBe(false);
+    // muse-code, pi and cline document no project-scoped MCP config.
+    for (const target of ['muse-code', 'pi', 'cline']) {
+      expect(writerSupports(target, mcp), target).toBe(false);
+    }
   });
 
   it('maps model settings only into targets that have a real place for them', () => {
@@ -35,7 +36,7 @@ describe('writerSupports (plan derives status from the real writer)', () => {
     for (const target of ['claude-code', 'opencode', 'kilo', 'codex']) {
       expect(writerSupports(target, probe), target).toBe(true);
     }
-    for (const target of ['cursor', 'gemini', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi']) {
+    for (const target of ['cursor', 'gemini', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline']) {
       expect(writerSupports(target, probe), target).toBe(false);
     }
   });

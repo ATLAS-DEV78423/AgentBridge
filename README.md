@@ -4,7 +4,7 @@
 [![CI](https://github.com/ATLAS-DEV78423/AgentBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/ATLAS-DEV78423/AgentBridge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> Migrate your AI coding agent configuration between 12 agents: Claude Code, OpenCode, Kilo Code, Cursor, Gemini CLI, Codex, Copilot CLI, Crush, Grok, omp, Muse Code, and Pi.
+> Migrate your AI coding agent configuration between 13 agents: Claude Code, OpenCode, Kilo Code, Cursor, Gemini CLI, Codex, Copilot CLI, Crush, Grok, omp, Muse Code, Pi, and Cline.
 
 A local-first CLI tool that discovers, compares, and migrates coding agent environments with backup and rollback.
 
@@ -80,15 +80,17 @@ agent-migrate migrate-all claude-code .
 | omp (Oh My Pi) | `omp` | `.pi/mcp.json` | AGENTS.md |
 | Muse Code | `muse-code` | — (instructions only) | MUSE_CODE.md |
 | Pi | `pi` | — (instructions only) | AGENTS.md |
+| Cline | `cline` | — (instructions only) | AGENTS.md |
 
 Honest caveats:
 - **Copilot CLI** primarily reads MCP config from user-level `~/.copilot/mcp-config.json`; project-level support varies by CLI version. Project files are migrated as-is — verify your install picks them up.
 - **Muse Code** and **Pi** document no project-scoped MCP config, so only instructions migrate for them.
+- **Cline** reads workspace rules from `.clinerules/` or `.cline/rules/` (either marks the project as Cline's) and from `AGENTS.md`, so migrations *into* Cline write `AGENTS.md`. Its MCP settings are user-level (`~/.cline/data/settings/cline_mcp_settings.json`, CLI: `~/.cline/mcp.json`) with no documented project-scoped equivalent — MCP servers are not migrated. Rule files inside `.clinerules/` are not scanned: a directory of rule files has no single-file equivalent to carry into another agent.
 - **Hermes** (Nous Research) and **OpenClaw** are intentionally unsupported: their configuration lives in global/gateway state with no repo-scoped files to migrate.
 
 ## How It Works
 
-1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.json[c]`, `.kilo/`, `.cursor/`, `.gemini/`, `.codex/`, `.copilot/`, `.crush.json`, `.mcp.json`, `.pi/` etc.
+1. **Scan** — finds `AGENTS.md`, `.claude/`, `opencode.json[c]`, `.kilo/`, `.cursor/`, `.gemini/`, `.codex/`, `.copilot/`, `.crush.json`, `.mcp.json`, `.pi/`, `.clinerules/` etc.
 2. **Plan** — maps each resource via compatibility rules (DIRECT / ADAPTED / UNSUPPORTED)
 3. **Migrate** — writes target files, backing up originals; existing JSON/JSONC/TOML configs are **merged**, so your hand-added keys survive
 4. **Rollback** — restores everything from backup
@@ -112,6 +114,7 @@ What each direction carries, computed from the writers' actual behavior:
 | claude-code → omp | ✓ | ✓ | ✗ |
 | claude-code → muse-code | ✓ | ✗ | ✗ |
 | claude-code → pi | ✓ | ✗ | ✗ |
+| claude-code → cline | ✓ | ✗ | ✗ |
 | opencode → claude-code | ✓ | ✓ | ✓ |
 | opencode → kilo | ✓ | ✓ | ✓ |
 | opencode → cursor | ✓ | ✓ | ✗ |
@@ -123,6 +126,7 @@ What each direction carries, computed from the writers' actual behavior:
 | opencode → omp | ✓ | ✓ | ✗ |
 | opencode → muse-code | ✓ | ✗ | ✗ |
 | opencode → pi | ✓ | ✗ | ✗ |
+| opencode → cline | ✓ | ✗ | ✗ |
 | kilo → claude-code | ✓ | ✓ | ✓ |
 | kilo → opencode | ✓ | ✓ | ✓ |
 | kilo → cursor | ✓ | ✓ | ✗ |
@@ -134,6 +138,7 @@ What each direction carries, computed from the writers' actual behavior:
 | kilo → omp | ✓ | ✓ | ✗ |
 | kilo → muse-code | ✓ | ✗ | ✗ |
 | kilo → pi | ✓ | ✗ | ✗ |
+| kilo → cline | ✓ | ✗ | ✗ |
 | cursor → claude-code | ✓ | ✓ | ✗ |
 | cursor → opencode | ✓ | ✓ | ✗ |
 | cursor → kilo | ✓ | ✓ | ✗ |
@@ -145,6 +150,7 @@ What each direction carries, computed from the writers' actual behavior:
 | cursor → omp | ✓ | ✓ | ✗ |
 | cursor → muse-code | ✓ | ✗ | ✗ |
 | cursor → pi | ✓ | ✗ | ✗ |
+| cursor → cline | ✓ | ✗ | ✗ |
 | gemini → claude-code | ✓ | ✓ | ✗ |
 | gemini → opencode | ✓ | ✓ | ✗ |
 | gemini → kilo | ✓ | ✓ | ✗ |
@@ -156,6 +162,7 @@ What each direction carries, computed from the writers' actual behavior:
 | gemini → omp | ✓ | ✓ | ✗ |
 | gemini → muse-code | ✓ | ✗ | ✗ |
 | gemini → pi | ✓ | ✗ | ✗ |
+| gemini → cline | ✓ | ✗ | ✗ |
 | codex → claude-code | ✓ | ✓ | ✓ |
 | codex → opencode | ✓ | ✓ | ✓ |
 | codex → kilo | ✓ | ✓ | ✓ |
@@ -167,6 +174,7 @@ What each direction carries, computed from the writers' actual behavior:
 | codex → omp | ✓ | ✓ | ✗ |
 | codex → muse-code | ✓ | ✗ | ✗ |
 | codex → pi | ✓ | ✗ | ✗ |
+| codex → cline | ✓ | ✗ | ✗ |
 | copilot → claude-code | ✓ | ✓ | ✗ |
 | copilot → opencode | ✓ | ✓ | ✗ |
 | copilot → kilo | ✓ | ✓ | ✗ |
@@ -178,6 +186,7 @@ What each direction carries, computed from the writers' actual behavior:
 | copilot → omp | ✓ | ✓ | ✗ |
 | copilot → muse-code | ✓ | ✗ | ✗ |
 | copilot → pi | ✓ | ✗ | ✗ |
+| copilot → cline | ✓ | ✗ | ✗ |
 | crush → claude-code | ✓ | ✓ | ✗ |
 | crush → opencode | ✓ | ✓ | ✗ |
 | crush → kilo | ✓ | ✓ | ✗ |
@@ -189,6 +198,7 @@ What each direction carries, computed from the writers' actual behavior:
 | crush → omp | ✓ | ✓ | ✗ |
 | crush → muse-code | ✓ | ✗ | ✗ |
 | crush → pi | ✓ | ✗ | ✗ |
+| crush → cline | ✓ | ✗ | ✗ |
 | grok → claude-code | ✓ | ✓ | ✗ |
 | grok → opencode | ✓ | ✓ | ✗ |
 | grok → kilo | ✓ | ✓ | ✗ |
@@ -200,6 +210,7 @@ What each direction carries, computed from the writers' actual behavior:
 | grok → omp | ✓ | ✓ | ✗ |
 | grok → muse-code | ✓ | ✗ | ✗ |
 | grok → pi | ✓ | ✗ | ✗ |
+| grok → cline | ✓ | ✗ | ✗ |
 | omp → claude-code | ✓ | ✓ | ✗ |
 | omp → opencode | ✓ | ✓ | ✗ |
 | omp → kilo | ✓ | ✓ | ✗ |
@@ -211,6 +222,7 @@ What each direction carries, computed from the writers' actual behavior:
 | omp → grok | ✓ | ✓ | ✗ |
 | omp → muse-code | ✓ | ✗ | ✗ |
 | omp → pi | ✓ | ✗ | ✗ |
+| omp → cline | ✓ | ✗ | ✗ |
 | muse-code → claude-code | ✓ | ✓ | ✗ |
 | muse-code → opencode | ✓ | ✓ | ✗ |
 | muse-code → kilo | ✓ | ✓ | ✗ |
@@ -222,6 +234,7 @@ What each direction carries, computed from the writers' actual behavior:
 | muse-code → grok | ✓ | ✓ | ✗ |
 | muse-code → omp | ✓ | ✓ | ✗ |
 | muse-code → pi | ✓ | ✗ | ✗ |
+| muse-code → cline | ✓ | ✗ | ✗ |
 | pi → claude-code | ✓ | ✓ | ✗ |
 | pi → opencode | ✓ | ✓ | ✗ |
 | pi → kilo | ✓ | ✓ | ✗ |
@@ -233,10 +246,23 @@ What each direction carries, computed from the writers' actual behavior:
 | pi → grok | ✓ | ✓ | ✗ |
 | pi → omp | ✓ | ✓ | ✗ |
 | pi → muse-code | ✓ | ✗ | ✗ |
+| pi → cline | ✓ | ✗ | ✗ |
+| cline → claude-code | ✓ | ✓ | ✗ |
+| cline → opencode | ✓ | ✓ | ✗ |
+| cline → kilo | ✓ | ✓ | ✗ |
+| cline → cursor | ✓ | ✓ | ✗ |
+| cline → gemini | ✓ | ✓ | ✗ |
+| cline → codex | ✓ | ✓ | ✗ |
+| cline → copilot | ✓ | ✓ | ✗ |
+| cline → crush | ✓ | ✓ | ✗ |
+| cline → grok | ✓ | ✓ | ✗ |
+| cline → omp | ✓ | ✓ | ✗ |
+| cline → muse-code | ✓ | ✗ | ✗ |
+| cline → pi | ✓ | ✗ | ✗ |
 
 Notes:
 - **Instructions** land at the target's own filename — `AGENTS.md` for most, `GEMINI.md` for Gemini CLI, `MUSE_CODE.md` for Muse Code, `.github/copilot-instructions.md` for Copilot CLI. Agent-specific names never leak into other targets.
-- **MCP servers** are translated to each target's dialect: explicit vs inferred `type` (Cursor requires `type: "stdio"`, Gemini and Codex infer from shape, Kilo wants array-form `command` with `environment`, Crush defaults stdio but tags remote as `http`). Agents without a project MCP config (muse-code, pi) are honest ✗.
+- **MCP servers** are translated to each target's dialect: explicit vs inferred `type` (Cursor requires `type: "stdio"`, Gemini and Codex infer from shape, Kilo wants array-form `command` with `environment`, Crush defaults stdio but tags remote as `http`). Agents without a project MCP config (muse-code, pi, cline) are honest ✗.
 - **Model settings** flow only where the target has a real field: `model` (+`permissions` for claude-code, `maxTokens` for kilo) in JSON/JSONC configs, `model` in Codex's TOML. The other targets store no model-equivalent fields — those ✗s are by design, not gaps.
 
 ## Development

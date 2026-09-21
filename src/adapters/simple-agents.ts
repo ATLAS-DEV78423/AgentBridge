@@ -20,7 +20,7 @@ function canonicalServer(server: Record<string, unknown>): Record<string, unknow
 
 export type SimpleAgentSpec = {
   id: string;
-  marker: string;                   // file whose existence means "detected"
+  marker: string | string[];        // file/dir(s) whose existence means "detected"; the first is the config path
   mcpKey: string | null;            // top-level config key; null = no project MCP config
   instructionFile: string | null;   // instructions file this agent reads; null = none confirmed
 };
@@ -33,15 +33,17 @@ export type SimpleAgentSpec = {
  * parse-normalized so writers' later JSON.parse always works.
  */
 export function makeJsonAgent(spec: SimpleAgentSpec): AgentAdapter {
-  const { id, marker, mcpKey, instructionFile } = spec;
+  const { id, mcpKey, instructionFile } = spec;
+  const markers = Array.isArray(spec.marker) ? spec.marker : [spec.marker];
 
   async function detect(ctx: { root: string }): Promise<DetectionResult> {
-    try {
-      await fs.access(path.join(ctx.root, marker));
-      return { detected: true, agent: id };
-    } catch {
-      return { detected: false };
+    for (const rel of markers) {
+      try {
+        await fs.access(path.join(ctx.root, rel));
+        return { detected: true, agent: id };
+      } catch { /* try next marker */ }
     }
+    return { detected: false };
   }
 
   async function scanProject(ctx: { root: string }): Promise<AgentBundle> {
@@ -57,11 +59,11 @@ export function makeJsonAgent(spec: SimpleAgentSpec): AgentAdapter {
 
     if (!mcpKey) return bundle;
 
-    const configPath = path.join(ctx.root, marker);
+    const configPath = path.join(ctx.root, markers[0]);
     try {
       const raw = await fs.readFile(configPath, 'utf-8');
       const config = JSON.parse(raw) as Record<string, Record<string, unknown>>;
-      bundle.opaque.push(createResource('opaque', marker, configPath, ctx.root, JSON.stringify(config)));
+      bundle.opaque.push(createResource('opaque', markers[0], configPath, ctx.root, JSON.stringify(config)));
       const servers = config[mcpKey];
       if (servers && typeof servers === 'object') {
         for (const [name, server] of Object.entries(servers as Record<string, unknown>)) {
@@ -152,3 +154,11 @@ export const writeMuseCodeFiles = makeJsonWriter({ marker: 'MUSE_CODE.md', mcpKe
 // directory is Pi's presence marker without claiming omp's config format.
 export const piAdapter = makeJsonAgent({ id: 'pi', marker: '.pi', mcpKey: null, instructionFile: 'AGENTS.md' });
 export const writePiFiles = makeJsonWriter({ marker: '.pi', mcpKey: null, instructionFile: 'AGENTS.md' });
+
+// Cline reads workspace rules from `.clinerules/` or `.cline/rules/` and from
+// the cross-tool AGENTS.md (docs.cline.bot/customization/cline-rules), either
+// of which marks the project as Cline's. Its MCP settings are user-level
+// (`~/.cline/data/settings/cline_mcp_settings.json`, CLI: `~/.cline/mcp.json`)
+// with no documented project-scoped equivalent, so only instructions migrate.
+export const clineAdapter = makeJsonAgent({ id: 'cline', marker: ['.clinerules', '.cline'], mcpKey: null, instructionFile: 'AGENTS.md' });
+export const writeClineFiles = makeJsonWriter({ marker: '.clinerules', mcpKey: null, instructionFile: 'AGENTS.md' });

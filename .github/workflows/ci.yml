@@ -63,5 +63,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Full-migration sweep (132 pairs)
+      - name: Full-migration sweep (156 pairs)
         run: npm run sweep

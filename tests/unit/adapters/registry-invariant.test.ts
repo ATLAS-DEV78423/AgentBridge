@@ -4,7 +4,7 @@ import { hasWriter, registerWriter } from '../../../src/core/writers.js';
 
 const EXPECTED = [
   'claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex',
-  'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi',
+  'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline',
 ];
 
 describe('adapter/writer registration invariant', () => {

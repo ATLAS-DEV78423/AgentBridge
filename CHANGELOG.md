@@ -1,6 +1,19 @@
 # Changelog
 
 
+## [Unreleased]
+
+### Features
+- **Cline support (13th agent)** — projects carrying `.clinerules/` or `.cline/rules/` are detected and migratable in both directions: instructions flow via `AGENTS.md`, the cross-tool rules file Cline reads (docs.cline.bot/customization/cline-rules). Cline's MCP settings are user-level (`~/.cline/data/settings/cline_mcp_settings.json`, CLI: `~/.cline/mcp.json`) with no documented project-scoped equivalent, so MCP servers are an honest ✗ in the matrix rather than a guessed path
+- Simple-agent factory accepts several detection markers (`marker: string | string[]`) — Cline's two documented rules locations share one adapter
+
+### Fixed
+- **Banner art restored** — the refactor commit reverted the ASCII art to the pre-rename version, so `agent-migrate --help` displayed art that did not spell AGENT-BRIDGE. The banner is back to figlet's ANSI Shadow rendering of the name, and a test now pins the glyph shapes against an expectation generated from the font (a silent revert fails CI)
+
+### Tests & docs
+- 214 tests (was 207); full-migration sweep covers 13×12 = 156 pairs (was 132)
+- README: 13 agents (blurb, table, Cline caveat), compatibility matrix regenerated from real writer behavior, help text lists `cline`
+
 ## [1.7.1] - 2026-09-19
 
 ### Fixed

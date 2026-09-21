@@ -43,6 +43,9 @@ const SPECS: Record<string, ConfigSpec> = {
   'omp': { configPaths: [{ path: '.pi/mcp.json', format: 'json' }], mcpKey: 'mcpServers', transport: null },
   'muse-code': { configPaths: [], mcpKey: null, transport: null },
   'pi': { configPaths: [], mcpKey: null, transport: null },
+  // Cline's MCP settings are user-level (~/.cline/data/settings), so it has no
+  // project config to validate — only its rules file.
+  'cline': { configPaths: [], mcpKey: null, transport: null },
 };
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
@@ -62,6 +65,7 @@ const INSTRUCTION_FILES: Record<string, string[]> = {
   'omp': ['AGENTS.md'],
   'muse-code': ['MUSE_CODE.md'],
   'pi': ['AGENTS.md'],
+  'cline': ['AGENTS.md'],
 };
 
 /**
