@@ -109,3 +109,5 @@ from a logged-in machine: `npm login && npm publish`.
 | v1.5.0 | `fix` syncs divergent instruction files; doctor reports every divergence; compiled-CLI smoke in CI |
 | v1.6.0 | `fix --dry-run`; honest migrate feedback; registry-validated `plan`/`diff`; `scan` prints agent ids; EPIPE fix |
 | v1.7.0 | 132-pair full-migration sweep; OpenCode documented dialect; Copilot instruction-file normalization |
+| v1.7.1 | `help` as a bare subcommand; dead-surface audit; `dist/` cleaned on build |
+| v1.8.0 | Cline adapter (13th agent) + 156-pair sweep; banner art restored |

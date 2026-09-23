@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [Unreleased]
+## [1.8.0] - 2026-09-23
 
 ### Features
 - **Cline support (13th agent)** — projects carrying `.clinerules/` or `.cline/rules/` are detected and migratable in both directions: instructions flow via `AGENTS.md`, the cross-tool rules file Cline reads (docs.cline.bot/customization/cline-rules). Cline's MCP settings are user-level (`~/.cline/data/settings/cline_mcp_settings.json`, CLI: `~/.cline/mcp.json`) with no documented project-scoped equivalent, so MCP servers are an honest ✗ in the matrix rather than a guessed path
