@@ -162,3 +162,18 @@ export const writePiFiles = makeJsonWriter({ marker: '.pi', mcpKey: null, instru
 // with no documented project-scoped equivalent, so only instructions migrate.
 export const clineAdapter = makeJsonAgent({ id: 'cline', marker: ['.clinerules', '.cline'], mcpKey: null, instructionFile: 'AGENTS.md' });
 export const writeClineFiles = makeJsonWriter({ marker: '.clinerules', mcpKey: null, instructionFile: 'AGENTS.md' });
+
+// Windsurf reads MCP config from `.codeium/windsurf/mcp_config.json` or
+// `.windsurf/mcp.json`, and instructions from `AGENTS.md` / `.windsurfrules`.
+export const windsurfAdapter = makeJsonAgent({
+  id: 'windsurf',
+  marker: ['.codeium/windsurf/mcp_config.json', '.windsurf/mcp.json'],
+  mcpKey: 'mcpServers',
+  instructionFile: 'AGENTS.md',
+});
+export const writeWindsurfFiles = makeJsonWriter({
+  marker: '.codeium/windsurf/mcp_config.json',
+  mcpKey: 'mcpServers',
+  instructionFile: 'AGENTS.md',
+});
+

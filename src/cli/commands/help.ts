@@ -30,6 +30,7 @@ Supported agents:
   muse-code                       Muse Code (instructions only)
   pi                              Pi (instructions only)
   cline                           Cline (instructions only)
+  windsurf                        Windsurf (source & target)
 `;
 
 export function showHelp(): void {

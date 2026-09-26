@@ -46,6 +46,14 @@ const SPECS: Record<string, ConfigSpec> = {
   // Cline's MCP settings are user-level (~/.cline/data/settings), so it has no
   // project config to validate — only its rules file.
   'cline': { configPaths: [], mcpKey: null, transport: null },
+  'windsurf': {
+    configPaths: [
+      { path: '.codeium/windsurf/mcp_config.json', format: 'json' },
+      { path: '.windsurf/mcp.json', format: 'json' },
+    ],
+    mcpKey: 'mcpServers',
+    transport: null,
+  },
 };
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
@@ -66,6 +74,7 @@ const INSTRUCTION_FILES: Record<string, string[]> = {
   'muse-code': ['MUSE_CODE.md'],
   'pi': ['AGENTS.md'],
   'cline': ['AGENTS.md'],
+  'windsurf': ['AGENTS.md', '.windsurfrules'],
 };
 
 /**

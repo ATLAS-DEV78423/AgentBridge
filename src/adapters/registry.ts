@@ -19,6 +19,7 @@ import {
   museCodeAdapter, writeMuseCodeFiles,
   piAdapter, writePiFiles,
   clineAdapter, writeClineFiles,
+  windsurfAdapter, writeWindsurfFiles,
 } from './simple-agents.js';
 
 /**
@@ -41,6 +42,7 @@ const AGENT_REGISTRATIONS: [string, AgentAdapter, (resources: Parameters<Paramet
   ['muse-code', museCodeAdapter, writeMuseCodeFiles],
   ['pi', piAdapter, writePiFiles],
   ['cline', clineAdapter, writeClineFiles],
+  ['windsurf', windsurfAdapter, writeWindsurfFiles],
 ];
 
 export const adapters: Record<string, AgentAdapter> = {};

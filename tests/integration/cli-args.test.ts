@@ -34,17 +34,17 @@ describe('careless-argument handling (playtest findings)', () => {
   });
 
   it('an unknown target names the agent and the supported list', async () => {
-    const { code, stderr } = await runCli(['migrate', 'claude-code', 'windsurf']);
+    const { code, stderr } = await runCli(['migrate', 'claude-code', 'not-an-agent']);
     expect(code).toBe(1);
-    expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/not-an-agent/);
     expect(stderr).toMatch(/Supported agents:/);
     expect(stderr).toMatch(/kilo/); // the list is the real, registry-derived one
   });
 
   it('migrate-all rejects an unknown source with the agent list on stderr', async () => {
-    const { code, stderr } = await runCli(['migrate-all', 'windsurf']);
+    const { code, stderr } = await runCli(['migrate-all', 'not-an-agent']);
     expect(code).toBe(1);
-    expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/not-an-agent/);
     expect(stderr).toMatch(/kilo/); // registry-derived list, on stderr so a pipe can't drop it
   });
 
@@ -81,16 +81,16 @@ describe('honest feedback (silent-empty findings)', () => {
   });
 
   it('plan validates its target against the real agent list', async () => {
-    const { code, stderr } = await runCli(['plan', 'claude-code', 'windsurf']);
+    const { code, stderr } = await runCli(['plan', 'claude-code', 'not-an-agent']);
     expect(code).toBe(1);
-    expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/not-an-agent/);
     expect(stderr).toMatch(/kilo/); // stale list had only claude-code, opencode, kilo… and was missing the rest
   });
 
   it('diff rejects an unknown target instead of reporting nothing to do', async () => {
-    const { code, stderr } = await runCli(['diff', 'claude-code', 'windsurf']);
+    const { code, stderr } = await runCli(['diff', 'claude-code', 'not-an-agent']);
     expect(code).toBe(1);
-    expect(stderr).toMatch(/windsurf/);
+    expect(stderr).toMatch(/not-an-agent/);
   });
 
   it('scan shows the agent id, not just the display name', async () => {

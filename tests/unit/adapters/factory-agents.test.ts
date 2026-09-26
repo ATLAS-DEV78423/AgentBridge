@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { copilotAdapter, writeCopilotFiles, crushAdapter, writeCrushFiles, grokAdapter, writeGrokFiles, ompAdapter, writeOmpFiles, museCodeAdapter, writeMuseCodeFiles, piAdapter, writePiFiles, clineAdapter, writeClineFiles, instructionsTarget } from '../../../src/adapters/simple-agents.js';
+import { copilotAdapter, writeCopilotFiles, crushAdapter, writeCrushFiles, grokAdapter, writeGrokFiles, ompAdapter, writeOmpFiles, museCodeAdapter, writeMuseCodeFiles, piAdapter, writePiFiles, clineAdapter, writeClineFiles, windsurfAdapter, writeWindsurfFiles, instructionsTarget } from '../../../src/adapters/simple-agents.js';
 import { AgentAdapter } from '../../../src/core/scanner/scanner.js';
 import { TargetFile } from '../../../src/core/writers.js';
 
@@ -36,6 +36,7 @@ const CASES: {
   // Cline's marker is a rules location, not a config file: `.clinerules` or
   // `.cline/rules` — the array's first entry is what this case exercises.
   { id: 'cline', adapter: clineAdapter, write: writeClineFiles, marker: '.clinerules', mcpKey: null, instructionFile: 'AGENTS.md' },
+  { id: 'windsurf', adapter: windsurfAdapter, write: writeWindsurfFiles, marker: '.codeium/windsurf/mcp_config.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' },
 ];
 
 const stdioServer = { type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', '.'], env: { K: 'v' } };
