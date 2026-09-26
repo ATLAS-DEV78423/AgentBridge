@@ -27,7 +27,7 @@ const run = promisify(execFile);
 // what `npx tsx` resolves to anyway.
 const CLI = [process.execPath, createRequire(import.meta.url).resolve('tsx/cli'), 'src/cli/main.ts'];
 
-const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline'] as const;
+const AGENTS = ['claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline', 'windsurf'] as const;
 type Agent = (typeof AGENTS)[number];
 
 /** The instruction file each agent reads (mirrors the scanners). */
@@ -45,6 +45,7 @@ const INSTRUCTION_FILE: Record<Agent, string> = {
   'muse-code': 'MUSE_CODE.md',
   'pi': 'AGENTS.md',
   'cline': 'AGENTS.md',
+  'windsurf': 'AGENTS.md',
 };
 
 const RULES = '# Shared project rules\n- Keep changes minimal.\n';
@@ -114,6 +115,11 @@ async function seed(dir: string, source: Agent): Promise<void> {
       await write('AGENTS.md', RULES);
       await write('.clinerules/coding.md', RULES);
       break;
+    case 'windsurf':
+      await write('AGENTS.md', RULES);
+      await write('.codeium/windsurf/mcp_config.json', json({ mcpServers: servers }));
+      break;
+
   }
 }
 
@@ -130,6 +136,8 @@ async function sourceFiles(dir: string, source: Agent): Promise<string[]> {
     'crush': '.crush.json',
     'grok': '.mcp.json',
     'omp': '.pi/mcp.json',
+    'windsurf': '.codeium/windsurf/mcp_config.json',
+
     // muse-code & pi & cline: no separate config file (marker IS the doc /
     // a bare dir / a rules directory)
   };
@@ -216,7 +224,9 @@ async function main(): Promise<number> {
             'muse-code': [],
             'pi': [],
             'cline': [],
+            'windsurf': ['.codeium/windsurf/mcp_config.json'],
           };
+
           const texts = (await Promise.all(
             targetConfigs[target].map(rel => fs.readFile(path.join(dir, rel), 'utf-8').catch(() => '')),
           )).join('\n');

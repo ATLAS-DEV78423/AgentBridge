@@ -7,7 +7,7 @@ import { ResourceBase } from '../../../src/core/model/types.js';
 
 const AGENTS = [
   'claude-code', 'opencode', 'kilo', 'cursor', 'gemini',
-  'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline',
+  'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline', 'windsurf',
 ] as const;
 
 // A representative opaque config per source agent — what "model settings" means there.
@@ -26,6 +26,7 @@ const opaqueFor = (source: string): ResourceBase => ({
     : source === 'omp' ? '.pi/mcp.json'
     : source === 'copilot' ? '.copilot/mcp-config.json'
     : source === 'grok' ? '.mcp.json'
+    : source === 'windsurf' ? '.codeium/windsurf/mcp_config.json'
     : 'MUSE_CODE.md',
   content: JSON.stringify(HAS_MODEL_SOURCES.has(source) ? { model: 'test-model' } : { mcpServers: {} }),
 });

@@ -4,7 +4,7 @@
 [![CI](https://github.com/ATLAS-DEV78423/AgentBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/ATLAS-DEV78423/AgentBridge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> Migrate your AI coding agent configuration between 13 agents: Claude Code, OpenCode, Kilo Code, Cursor, Gemini CLI, Codex, Copilot CLI, Crush, Grok, omp, Muse Code, Pi, and Cline.
+> Migrate your AI coding agent configuration between 14 agents: Claude Code, OpenCode, Kilo Code, Cursor, Gemini CLI, Codex, Copilot CLI, Crush, Grok, omp, Muse Code, Pi, Cline, and Windsurf.
 
 A local-first CLI tool that discovers, compares, and migrates coding agent environments with backup and rollback.
 
@@ -81,6 +81,7 @@ agent-migrate migrate-all claude-code .
 | Muse Code | `muse-code` | — (instructions only) | MUSE_CODE.md |
 | Pi | `pi` | — (instructions only) | AGENTS.md |
 | Cline | `cline` | — (instructions only) | AGENTS.md |
+| Windsurf | `windsurf` | `.codeium/windsurf/mcp_config.json` | AGENTS.md |
 
 Honest caveats:
 - **Copilot CLI** primarily reads MCP config from user-level `~/.copilot/mcp-config.json`; project-level support varies by CLI version. Project files are migrated as-is — verify your install picks them up.
@@ -99,10 +100,8 @@ MCP server configs are translated between formats (e.g. Claude's implicit stdio 
 
 ## What migrates (per pair)
 
-What each direction carries, computed from the writers' actual behavior:
-
 | Direction | Instructions | MCP servers | Model settings |
-|---|---|---|---|
+|-----------|:------------:|:-----------:|:--------------:|
 | claude-code → opencode | ✓ | ✓ | ✓ |
 | claude-code → kilo | ✓ | ✓ | ✓ |
 | claude-code → cursor | ✓ | ✓ | ✗ |
@@ -115,6 +114,7 @@ What each direction carries, computed from the writers' actual behavior:
 | claude-code → muse-code | ✓ | ✗ | ✗ |
 | claude-code → pi | ✓ | ✗ | ✗ |
 | claude-code → cline | ✓ | ✗ | ✗ |
+| claude-code → windsurf | ✓ | ✓ | ✗ |
 | opencode → claude-code | ✓ | ✓ | ✓ |
 | opencode → kilo | ✓ | ✓ | ✓ |
 | opencode → cursor | ✓ | ✓ | ✗ |
@@ -127,6 +127,7 @@ What each direction carries, computed from the writers' actual behavior:
 | opencode → muse-code | ✓ | ✗ | ✗ |
 | opencode → pi | ✓ | ✗ | ✗ |
 | opencode → cline | ✓ | ✗ | ✗ |
+| opencode → windsurf | ✓ | ✓ | ✗ |
 | kilo → claude-code | ✓ | ✓ | ✓ |
 | kilo → opencode | ✓ | ✓ | ✓ |
 | kilo → cursor | ✓ | ✓ | ✗ |
@@ -139,6 +140,7 @@ What each direction carries, computed from the writers' actual behavior:
 | kilo → muse-code | ✓ | ✗ | ✗ |
 | kilo → pi | ✓ | ✗ | ✗ |
 | kilo → cline | ✓ | ✗ | ✗ |
+| kilo → windsurf | ✓ | ✓ | ✗ |
 | cursor → claude-code | ✓ | ✓ | ✗ |
 | cursor → opencode | ✓ | ✓ | ✗ |
 | cursor → kilo | ✓ | ✓ | ✗ |
@@ -151,6 +153,7 @@ What each direction carries, computed from the writers' actual behavior:
 | cursor → muse-code | ✓ | ✗ | ✗ |
 | cursor → pi | ✓ | ✗ | ✗ |
 | cursor → cline | ✓ | ✗ | ✗ |
+| cursor → windsurf | ✓ | ✓ | ✗ |
 | gemini → claude-code | ✓ | ✓ | ✗ |
 | gemini → opencode | ✓ | ✓ | ✗ |
 | gemini → kilo | ✓ | ✓ | ✗ |
@@ -163,6 +166,7 @@ What each direction carries, computed from the writers' actual behavior:
 | gemini → muse-code | ✓ | ✗ | ✗ |
 | gemini → pi | ✓ | ✗ | ✗ |
 | gemini → cline | ✓ | ✗ | ✗ |
+| gemini → windsurf | ✓ | ✓ | ✗ |
 | codex → claude-code | ✓ | ✓ | ✓ |
 | codex → opencode | ✓ | ✓ | ✓ |
 | codex → kilo | ✓ | ✓ | ✓ |
@@ -175,6 +179,7 @@ What each direction carries, computed from the writers' actual behavior:
 | codex → muse-code | ✓ | ✗ | ✗ |
 | codex → pi | ✓ | ✗ | ✗ |
 | codex → cline | ✓ | ✗ | ✗ |
+| codex → windsurf | ✓ | ✓ | ✗ |
 | copilot → claude-code | ✓ | ✓ | ✗ |
 | copilot → opencode | ✓ | ✓ | ✗ |
 | copilot → kilo | ✓ | ✓ | ✗ |
@@ -187,6 +192,7 @@ What each direction carries, computed from the writers' actual behavior:
 | copilot → muse-code | ✓ | ✗ | ✗ |
 | copilot → pi | ✓ | ✗ | ✗ |
 | copilot → cline | ✓ | ✗ | ✗ |
+| copilot → windsurf | ✓ | ✓ | ✗ |
 | crush → claude-code | ✓ | ✓ | ✗ |
 | crush → opencode | ✓ | ✓ | ✗ |
 | crush → kilo | ✓ | ✓ | ✗ |
@@ -199,6 +205,7 @@ What each direction carries, computed from the writers' actual behavior:
 | crush → muse-code | ✓ | ✗ | ✗ |
 | crush → pi | ✓ | ✗ | ✗ |
 | crush → cline | ✓ | ✗ | ✗ |
+| crush → windsurf | ✓ | ✓ | ✗ |
 | grok → claude-code | ✓ | ✓ | ✗ |
 | grok → opencode | ✓ | ✓ | ✗ |
 | grok → kilo | ✓ | ✓ | ✗ |
@@ -211,6 +218,7 @@ What each direction carries, computed from the writers' actual behavior:
 | grok → muse-code | ✓ | ✗ | ✗ |
 | grok → pi | ✓ | ✗ | ✗ |
 | grok → cline | ✓ | ✗ | ✗ |
+| grok → windsurf | ✓ | ✓ | ✗ |
 | omp → claude-code | ✓ | ✓ | ✗ |
 | omp → opencode | ✓ | ✓ | ✗ |
 | omp → kilo | ✓ | ✓ | ✗ |
@@ -223,6 +231,7 @@ What each direction carries, computed from the writers' actual behavior:
 | omp → muse-code | ✓ | ✗ | ✗ |
 | omp → pi | ✓ | ✗ | ✗ |
 | omp → cline | ✓ | ✗ | ✗ |
+| omp → windsurf | ✓ | ✓ | ✗ |
 | muse-code → claude-code | ✓ | ✓ | ✗ |
 | muse-code → opencode | ✓ | ✓ | ✗ |
 | muse-code → kilo | ✓ | ✓ | ✗ |
@@ -235,6 +244,7 @@ What each direction carries, computed from the writers' actual behavior:
 | muse-code → omp | ✓ | ✓ | ✗ |
 | muse-code → pi | ✓ | ✗ | ✗ |
 | muse-code → cline | ✓ | ✗ | ✗ |
+| muse-code → windsurf | ✓ | ✓ | ✗ |
 | pi → claude-code | ✓ | ✓ | ✗ |
 | pi → opencode | ✓ | ✓ | ✗ |
 | pi → kilo | ✓ | ✓ | ✗ |
@@ -247,6 +257,7 @@ What each direction carries, computed from the writers' actual behavior:
 | pi → omp | ✓ | ✓ | ✗ |
 | pi → muse-code | ✓ | ✗ | ✗ |
 | pi → cline | ✓ | ✗ | ✗ |
+| pi → windsurf | ✓ | ✓ | ✗ |
 | cline → claude-code | ✓ | ✓ | ✗ |
 | cline → opencode | ✓ | ✓ | ✗ |
 | cline → kilo | ✓ | ✓ | ✗ |
@@ -259,6 +270,20 @@ What each direction carries, computed from the writers' actual behavior:
 | cline → omp | ✓ | ✓ | ✗ |
 | cline → muse-code | ✓ | ✗ | ✗ |
 | cline → pi | ✓ | ✗ | ✗ |
+| cline → windsurf | ✓ | ✓ | ✗ |
+| windsurf → claude-code | ✓ | ✓ | ✗ |
+| windsurf → opencode | ✓ | ✓ | ✗ |
+| windsurf → kilo | ✓ | ✓ | ✗ |
+| windsurf → cursor | ✓ | ✓ | ✗ |
+| windsurf → gemini | ✓ | ✓ | ✗ |
+| windsurf → codex | ✓ | ✓ | ✗ |
+| windsurf → copilot | ✓ | ✓ | ✗ |
+| windsurf → crush | ✓ | ✓ | ✗ |
+| windsurf → grok | ✓ | ✓ | ✗ |
+| windsurf → omp | ✓ | ✓ | ✗ |
+| windsurf → muse-code | ✓ | ✗ | ✗ |
+| windsurf → pi | ✓ | ✗ | ✗ |
+| windsurf → cline | ✓ | ✗ | ✗ |
 
 Notes:
 - **Instructions** land at the target's own filename — `AGENTS.md` for most, `GEMINI.md` for Gemini CLI, `MUSE_CODE.md` for Muse Code, `.github/copilot-instructions.md` for Copilot CLI. Agent-specific names never leak into other targets.
