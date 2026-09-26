@@ -34,12 +34,11 @@ npm run typecheck  # Type check
 
 ## Adding a New Agent Adapter
 
-1. Create `src/adapters/<agent-name>/detector.ts`
-2. Create `src/adapters/<agent-name>/scanner.ts`
-3. Create `src/adapters/<agent-name>/index.ts`
-4. Add fixture in `tests/fixtures/`
-5. Add integration test
-6. Register in `src/cli/commands/scan.ts` and `plan.ts`
+1. For standard JSON-config/instruction agents: define the adapter and writer using `makeJsonAgent` and `makeJsonWriter` in `src/adapters/simple-agents.ts`. For bespoke dialect agents, create `src/adapters/<agent-name>/` (detector, scanner, writer).
+2. Register the adapter and writer in `AGENT_REGISTRATIONS` in `src/adapters/registry.ts`.
+3. Add the agent's schema facts to `SPECS` and its instructions to `INSTRUCTION_FILES` in `src/core/doctor.ts`.
+4. Add unit and integration tests under `tests/unit/adapters/` and `tests/integration/`.
+5. Add the agent to `scripts/sweep.ts` and update the compatibility matrix in `README.md`.
 
 ## Commit Messages
 
