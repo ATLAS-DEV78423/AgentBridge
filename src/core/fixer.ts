@@ -22,7 +22,7 @@ import { createTransaction, applyTransaction, Transaction, TransactionOperation 
  */
 export type PlannedChange = {
   file: string;
-  kind: 'rewrite-comment-free' | 'sync-from-AGENTS.md';
+  kind: 'rewrite-comment-free' | 'sync-from-AGENTS.md' | 'rewrite-alias-key';
   before: string;
   after: string;
 };
@@ -56,6 +56,34 @@ export async function fixProject(
         });
         continue;
       }
+
+      // 2. Legacy alias key found (e.g. mcpServers in an opencode/kilo config expecting mcp)
+      const aliasMatch = problem.message.match(/found "([^"]+)" but \w+ expects "([^"]+)"/);
+      if (aliasMatch) {
+        const [, alias, expected] = aliasMatch;
+        const raw = await readFile(problem.file);
+        if (raw === null) continue;
+
+        let doc: unknown;
+        try {
+          doc = parseJsonc(raw);
+        } catch { continue; }
+
+        if (doc && typeof doc === 'object' && !Array.isArray(doc)) {
+          const obj = doc as Record<string, unknown>;
+          if (alias in obj && !(expected in obj)) {
+            obj[expected] = obj[alias];
+            delete obj[alias];
+            planned.push({
+              op: { type: 'create', targetPath: problem.file, content: JSON.stringify(obj, null, 2) + '\n' },
+              kind: 'rewrite-alias-key',
+              before: raw,
+            });
+            continue;
+          }
+        }
+      }
+
 
       // 2. Divergent project instructions → sync from AGENTS.md.
       if (report.agent === 'project' && problem.message.includes('instruction files diverge')) {

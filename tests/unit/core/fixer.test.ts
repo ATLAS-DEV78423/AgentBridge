@@ -114,4 +114,32 @@ describe('fixProject (safe auto-fixes only)', () => {
     expect(fixes).toEqual([]);
     expect(txId).toBeNull();
   });
+
+  it('renames a legacy alias key (mcpServers -> mcp) in place with a backup', async () => {
+    await write('AGENTS.md', '# Rules');
+    const legacyConfig = JSON.stringify({
+      mcpServers: {
+        fs: { command: 'npx', args: ['-y', 'fs'] },
+      },
+    }, null, 2) + '\n';
+    await write('opencode.json', legacyConfig);
+
+    const { txId, fixes, changes } = await fixProject(tmpDir);
+    expect(fixes).toEqual(['opencode.json']);
+    expect(txId).toBeTruthy();
+    expect(changes[0].kind).toBe('rewrite-alias-key');
+
+    const after = await fs.readFile(path.join(tmpDir, 'opencode.json'), 'utf-8');
+    const parsed = JSON.parse(after);
+    expect(parsed.mcp).toBeDefined();
+    expect(parsed.mcpServers).toBeUndefined();
+    expect(parsed.mcp.fs).toEqual({ command: 'npx', args: ['-y', 'fs'] });
+
+    // verify backup manifest
+    const backupDir = path.join(tmpDir, '.agentbridge', 'backups', txId!);
+    const manifest = JSON.parse(await fs.readFile(path.join(backupDir, 'manifest.json'), 'utf-8'));
+    expect(manifest.originals['opencode.json']).toBeDefined();
+    const backup = await fs.readFile(path.join(backupDir, 'opencode.json'), 'utf-8');
+    expect(backup).toBe(legacyConfig);
+  });
 });
