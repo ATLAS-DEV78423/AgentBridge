@@ -2,7 +2,8 @@
  * Full-migration sweep: every supported source agent migrated to every
  * other supported agent, through the real CLI, then doctor-validated.
  *
- * For each of the 13×12 pairs, a fresh temp dir is seeded with ONLY the
+ * For each of the N×(N-1) pairs (N = AGENTS.length), a fresh temp dir is
+ * seeded with ONLY the
  * source's files (marker config with two MCP servers — one command-based
  * with env, one url-based — plus the agent's instruction file), migrated,
  * and the result is checked:
