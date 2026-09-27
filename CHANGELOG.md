@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.9.0] - 2026-09-27
+
+### Features
+- **Windsurf support (14th agent)** — projects carrying `.codeium/windsurf/mcp_config.json` are detected and migratable in both directions, joining the 13 agents shipped in 1.8.0
+
+### Refactor
+- **One adapter registry** — an agent's id, detector and writer lived in three files, so registering an adapter without its writer was possible (and shipped as a bug once). They are now paired in a single `AGENT_REGISTRATIONS` table in `src/adapters/registry.ts`, and the per-adapter `detector.ts` / `index.ts` files are gone: adding an agent is one row instead of three files
+- **Shared MCP dialect** — OpenCode and Kilo document the identical `type: "local" | "remote"` MCP shape and each adapter translated it in both directions. The translation now lives once in `src/adapters/dialect.ts`, written at the dialect boundary
+- Dead guards removed with the duplication they existed to catch: `migrate-all`'s `hasWriter` pre-flight (every registry entry has a writer, so a detected target is always writable), `ResourceBase.id` and `TargetFile.action` (`'create'` was the only possible value), the plan result's `method` field (redundant with `status === 'DIRECT'`), and `positional()`'s per-call flag list
+- 370 insertions, 679 deletions
+
+### Tests & docs
+- 218 tests (was 214); full-migration sweep widened to 14×13 = 182 pairs (was 156) — **182/182 passing**
+- The sweep script header and the CI sweep job name no longer hardcode a pair count (both read as stale at 13×12 once Windsurf landed); the header now derives it from the agent list
+- CONTRIBUTING documents the centralized registry; README compatibility matrix regenerated for Windsurf
 
 ## [1.8.0] - 2026-09-23
 
