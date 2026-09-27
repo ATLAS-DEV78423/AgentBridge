@@ -1,12 +1,10 @@
 import { ResourceBase } from '../../core/model/types.js';
 import { TargetFile } from '../../core/writers.js';
+import { canonicalServer } from '../dialect.js';
 import { instructionsTarget } from '../simple-agents.js';
 
-/** Claude Code infers stdio from `command`; OpenCode's explicit `type` is not valid here. */
-function translateMcpServer(server: Record<string, unknown>): Record<string, unknown> {
-  const { type: _type, ...rest } = server;
-  return rest;
-}
+/** Claude Code infers stdio from `command`; an explicit transport tag is not valid here. */
+const translateMcpServer = canonicalServer;
 
 /** Pick the subset of an agent's opaque config that Claude Code understands. */
 function buildClaudeSettings(opaqueContent: string): Record<string, unknown> {
@@ -37,7 +35,7 @@ export function writeClaudeFiles(resources: ResourceBase[]): TargetFile[] {
 
   for (const r of resources) {
     if (r.type === 'instructions' && r.content) {
-      files.push({ path: instructionsTarget(r.name), content: r.content, action: 'create' });
+      files.push({ path: instructionsTarget(r.name), content: r.content });
     } else if (r.type === 'opaque' && r.content) {
       Object.assign(settings, buildClaudeSettings(r.content));
       hasSettings = true;
@@ -51,7 +49,7 @@ export function writeClaudeFiles(resources: ResourceBase[]): TargetFile[] {
   if (Object.keys(mcpServers).length > 0) settings.mcpServers = mcpServers;
 
   if (hasSettings || Object.keys(mcpServers).length > 0) {
-    files.push({ path: '.claude/settings.json', content: JSON.stringify(settings, null, 2), action: 'create' });
+    files.push({ path: '.claude/settings.json', content: JSON.stringify(settings, null, 2) });
   }
 
   return files;

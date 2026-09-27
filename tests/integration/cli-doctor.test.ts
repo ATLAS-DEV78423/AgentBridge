@@ -20,10 +20,8 @@ describe('cli doctor', () => {
   it('exits 1 and names the offending file on a broken config', async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'agentbridge-docbad-'));
     await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), '# Rules');
-    await fs.writeFile(path.join(tmpDir, '.claude', 'settings.json'), '{ "model": "m", }').catch(async () => {
-      await fs.mkdir(path.join(tmpDir, '.claude'), { recursive: true });
-      await fs.writeFile(path.join(tmpDir, '.claude', 'settings.json'), '{ "model": "m", }');
-    });
+    await fs.mkdir(path.join(tmpDir, '.claude'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, '.claude', 'settings.json'), '{ "model": "m", }');
 
     const failed = await runCli(['doctor', tmpDir]);
 

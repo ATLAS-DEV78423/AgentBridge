@@ -8,12 +8,12 @@ import { parseJsonc } from './jsonc.js';
 import { parseToml, serializeToml } from './toml.js';
 import { doctor } from './doctor.js';
 
-/** Flatten AgentBundle's typed arrays into a single ResourceBase[] with type set from section name. */
+/** Flatten AgentBundle's typed arrays into one list, tagging each with its section. */
 export function flattenBundle(bundle: AgentBundle): ResourceBase[] {
   const resources: ResourceBase[] = [];
   for (const section of ['instructions', 'mcpServers', 'opaque'] as const) {
     for (const resource of bundle[section]) {
-      resources.push({ ...resource, type: section === 'opaque' ? resource.type : section });
+      resources.push({ ...resource, type: section });
     }
   }
   return resources;
@@ -78,24 +78,20 @@ function writeDoc(p: string, doc: Record<string, unknown>): string {
 export type PlanResult = {
   resource: ResourceBase;
   status: MigrationStatus;
-  method: 'copy' | 'rewrite';
 };
 
 /**
  * Statuses come from the target's real writer via writerSupports — what plan
- * reports is by construction what migration would do.
+ * reports is by construction what migration would do. DIRECT means copied
+ * verbatim (instructions); ADAPTED means rewritten into the target's dialect.
  */
 export function planMigration(source: string, target: string, resources: ResourceBase[]): PlanResult[] {
-  return resources.map(resource => {
-    const supported = writerSupports(target, resource);
-    return {
-      resource,
-      status: !supported
-        ? 'UNSUPPORTED'
-        : resource.type === 'instructions' ? 'DIRECT' : 'ADAPTED',
-      method: resource.type === 'instructions' ? 'copy' : 'rewrite',
-    };
-  });
+  return resources.map(resource => ({
+    resource,
+    status: !writerSupports(target, resource)
+      ? 'UNSUPPORTED'
+      : resource.type === 'instructions' ? 'DIRECT' : 'ADAPTED',
+  }));
 }
 
 export async function migratePipeline(
@@ -154,7 +150,7 @@ export async function migratePipeline(
         content = writeDoc(f.path, deepMergeJson(existing, incoming));
       }
     } catch { /* no existing file — write as-is */ }
-    ops.push({ type: 'create' as const, targetPath: f.path, content });
+    ops.push({ targetPath: f.path, content });
   }
 
   if (ops.length === 0) {

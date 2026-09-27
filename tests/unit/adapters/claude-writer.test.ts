@@ -3,19 +3,19 @@ import { writeClaudeFiles } from '../../../src/adapters/claude-code/writer.js';
 import { ResourceBase } from '../../../src/core/model/types.js';
 
 const inst = (name: string, content: string): ResourceBase => ({
-  id: `instructions-${name}`, type: 'instructions', name, content,
+  type: 'instructions', name, content,
 });
 const mcp = (name: string, config: object): ResourceBase => ({
-  id: `mcpServers-${name}`, type: 'mcpServers', name, content: JSON.stringify(config),
+  type: 'mcpServers', name, content: JSON.stringify(config),
 });
 const opaque = (name: string, content: string): ResourceBase => ({
-  id: `opaque-${name}`, type: 'opaque', name, content,
+  type: 'opaque', name, content,
 });
 
 describe('writeClaudeFiles', () => {
   it('passes instructions through unchanged', () => {
     const files = writeClaudeFiles([inst('AGENTS.md', '# Rules')]);
-    expect(files).toEqual([{ path: 'AGENTS.md', content: '# Rules', action: 'create' }]);
+    expect(files).toEqual([{ path: 'AGENTS.md', content: '# Rules' }]);
   });
 
   it('normalizes foreign instruction files (GEMINI.md) to AGENTS.md', () => {

@@ -14,10 +14,10 @@ export async function executeDiff(source: string, target: string, projectPath: s
   console.log('');
 
   let hasChanges = false;
-  for (const { resource, status, method } of plan) {
+  for (const { resource, status } of plan) {
     if (status !== 'UNSUPPORTED') {
       hasChanges = true;
-      const action = method === 'copy' ? '+' : '~';
+      const action = status === 'DIRECT' ? '+' : '~';
       console.log(`  ${action} ${resource.name} (${resource.type})`);
     }
   }

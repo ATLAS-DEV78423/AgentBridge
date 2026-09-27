@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { adapters } from '../../../src/adapters/registry.js';
-import { hasWriter, registerWriter } from '../../../src/core/writers.js';
+import { getWriter, registerWriter } from '../../../src/core/writers.js';
 
 const EXPECTED = [
   'claude-code', 'opencode', 'kilo', 'cursor', 'gemini', 'codex',
@@ -12,7 +12,7 @@ describe('adapter/writer registration invariant', () => {
     expect(Object.keys(adapters).sort()).toEqual([...EXPECTED].sort());
     for (const id of EXPECTED) {
       expect(adapters[id], `adapter for ${id}`).toBeDefined();
-      expect(hasWriter(id), `writer for ${id}`).toBe(true);
+      expect(getWriter(id), `writer for ${id}`).toBeDefined();
     }
   });
 

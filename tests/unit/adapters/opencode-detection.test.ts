@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { detectOpenCode } from '../../../src/adapters/opencode/detector.js';
+import { detectOpenCode } from '../../../src/adapters/opencode/scanner.js';
 import { scanOpenCodeProject } from '../../../src/adapters/opencode/scanner.js';
 
 let tmpDir: string;

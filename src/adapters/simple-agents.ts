@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { AgentAdapter, DetectionResult, createResource } from '../core/scanner/scanner.js';
+import { AgentAdapter, DetectionResult } from '../core/scanner/scanner.js';
 import { AgentBundle, ResourceBase } from '../core/model/types.js';
 import { TargetFile, WriteFn } from '../core/writers.js';
+import { canonicalServer } from './dialect.js';
 
 /** Agent-specific instruction filenames that must not leak into other targets. */
 const FOREIGN_INSTRUCTIONS: Record<string, string> = { 'GEMINI.md': 'AGENTS.md', 'MUSE_CODE.md': 'AGENTS.md', '.github/copilot-instructions.md': 'AGENTS.md' };
@@ -10,12 +11,6 @@ const FOREIGN_INSTRUCTIONS: Record<string, string> = { 'GEMINI.md': 'AGENTS.md',
 /** Where an instruction file belongs in a generic target; agent-specific names normalize to AGENTS.md. */
 export function instructionsTarget(name: string): string {
   return FOREIGN_INSTRUCTIONS[name] ?? name;
-}
-
-/** Strip agent-dialect fields so servers flow in the canonical command/args/env + url shape. */
-function canonicalServer(server: Record<string, unknown>): Record<string, unknown> {
-  const { type: _type, ...rest } = server;
-  return rest;
 }
 
 export type SimpleAgentSpec = {
@@ -40,7 +35,7 @@ export function makeJsonAgent(spec: SimpleAgentSpec): AgentAdapter {
     for (const rel of markers) {
       try {
         await fs.access(path.join(ctx.root, rel));
-        return { detected: true, agent: id };
+        return { detected: true };
       } catch { /* try next marker */ }
     }
     return { detected: false };
@@ -53,7 +48,7 @@ export function makeJsonAgent(spec: SimpleAgentSpec): AgentAdapter {
       const p = path.join(ctx.root, instructionFile);
       try {
         const content = await fs.readFile(p, 'utf-8');
-        bundle.instructions.push(createResource('instructions', instructionFile, p, ctx.root, content));
+        bundle.instructions.push({ name: instructionFile, content });
       } catch { /* absent */ }
     }
 
@@ -63,12 +58,12 @@ export function makeJsonAgent(spec: SimpleAgentSpec): AgentAdapter {
     try {
       const raw = await fs.readFile(configPath, 'utf-8');
       const config = JSON.parse(raw) as Record<string, Record<string, unknown>>;
-      bundle.opaque.push(createResource('opaque', markers[0], configPath, ctx.root, JSON.stringify(config)));
+      bundle.opaque.push({ name: markers[0], content: JSON.stringify(config) });
       const servers = config[mcpKey];
       if (servers && typeof servers === 'object') {
         for (const [name, server] of Object.entries(servers as Record<string, unknown>)) {
           if (server && typeof server === 'object') {
-            bundle.mcpServers.push(createResource('mcpServers', name, configPath, ctx.root, JSON.stringify(canonicalServer(server as Record<string, unknown>))));
+            bundle.mcpServers.push({ name, content: JSON.stringify(canonicalServer(server as Record<string, unknown>)) });
           }
         }
       }
@@ -117,10 +112,10 @@ export function makeJsonWriter(spec: {
     }
 
     for (const [p, content] of instructions) {
-      files.push({ path: p, content, action: 'create' });
+      files.push({ path: p, content });
     }
     if (Object.keys(servers).length > 0) {
-      files.push({ path: spec.marker, content: JSON.stringify({ [spec.mcpKey!]: servers }, null, 2), action: 'create' });
+      files.push({ path: spec.marker, content: JSON.stringify({ [spec.mcpKey!]: servers }, null, 2) });
     }
     return files;
   };
@@ -137,10 +132,12 @@ export const writeGrokFiles = makeJsonWriter({ marker: '.mcp.json', mcpKey: 'mcp
 
 // Gemini CLI's schema is exactly the factory defaults: transport inferred from
 // shape (explicit type stripped), GEMINI.md instructions, mcpServers key.
+export const geminiAdapter = makeJsonAgent({ id: 'gemini', marker: '.gemini/settings.json', mcpKey: 'mcpServers', instructionFile: 'GEMINI.md' });
 export const writeGeminiFiles = makeJsonWriter({ marker: '.gemini/settings.json', mcpKey: 'mcpServers', instructionFile: 'GEMINI.md' });
 
 // Cursor requires type: "stdio" on command-based servers (cursor.com/docs);
 // remote url entries pass through, which is the factory's remote default.
+export const cursorAdapter = makeJsonAgent({ id: 'cursor', marker: '.cursor/mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });
 export const writeCursorFiles = makeJsonWriter({ marker: '.cursor/mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md', stdioType: 'stdio' });
 
 export const ompAdapter = makeJsonAgent({ id: 'omp', marker: '.pi/mcp.json', mcpKey: 'mcpServers', instructionFile: 'AGENTS.md' });

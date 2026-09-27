@@ -1,31 +1,10 @@
 import { ResourceBase } from '../../core/model/types.js';
 import { TargetFile } from '../../core/writers.js';
 import { instructionsTarget } from '../simple-agents.js';
+import { fromCanonicalServer } from '../dialect.js';
 
-/**
- * Canonical command/args/env → OpenCode's documented dialect
- * (opencode.ai/docs/mcp-servers): local servers are `type: "local"` with an
- * array `command` and `environment`; remote servers are `type: "remote"` with
- * `url` (+ headers). Legacy `mcpServers`-shaped opaque configs map through
- * the same translation.
- */
-function translateMcpServer(server: Record<string, unknown>): Record<string, unknown> {
-  if (typeof server.url === 'string') {
-    return {
-      type: 'remote',
-      url: server.url,
-      ...(server.headers && typeof server.headers === 'object' ? { headers: server.headers } : {}),
-    };
-  }
-  return {
-    type: 'local',
-    command: [
-      ...(typeof server.command === 'string' ? [server.command] : []),
-      ...(Array.isArray(server.args) ? server.args : []),
-    ],
-    ...(server.env && typeof server.env === 'object' ? { environment: server.env } : {}),
-  };
-}
+/** OpenCode writes the same local/remote dialect as Kilo, under its own key. */
+const translateMcpServer = fromCanonicalServer;
 
 /** Pick the subset of an agent's opaque config that OpenCode understands. */
 function buildOpenCodeConfig(opaqueContent: string): Record<string, unknown> {
@@ -63,8 +42,7 @@ export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
       Object.assign(openCodeConfig, buildOpenCodeConfig(r.content));
     } else if (r.type === 'mcpServers' && r.content) {
       try {
-        const serverConfig = JSON.parse(r.content);
-        mcpServers[r.name] = translateMcpServer(serverConfig);
+        mcpServers[r.name] = translateMcpServer(JSON.parse(r.content));
       } catch { /* invalid JSON, skip */ }
     }
   }
@@ -76,17 +54,13 @@ export function writeOpenCodeFiles(resources: ResourceBase[]): TargetFile[] {
 
   // Write opencode.json if we have anything to write
   if (Object.keys(openCodeConfig).length > 0) {
-    files.push({
-      path: 'opencode.json',
-      content: JSON.stringify(openCodeConfig, null, 2),
-      action: 'create'
-    });
+    files.push({ path: 'opencode.json', content: JSON.stringify(openCodeConfig, null, 2) });
   }
 
   // Second pass: write instruction files
   for (const r of resources) {
     if (r.type === 'instructions') {
-      files.push({ path: instructionsTarget(r.name), content: r.content || '', action: 'create' });
+      files.push({ path: instructionsTarget(r.name), content: r.content ?? '' });
     }
   }
 

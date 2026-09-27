@@ -1,9 +1,25 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { AgentBundle } from '../../core/model/types.js';
-import { createResource } from '../../core/scanner/scanner.js';
+import { AgentAdapter, DetectionResult } from '../../core/scanner/scanner.js';
 
 const INSTRUCTION_FILES = ['AGENTS.md', 'CLAUDE.md'];
+
+const CLAUDE_MARKERS = [
+  '.claude/settings.json',
+  '.claude/settings.local.json',
+  'CLAUDE.md'
+];
+
+export async function detectClaude(ctx: { root: string }): Promise<DetectionResult> {
+  for (const marker of CLAUDE_MARKERS) {
+    try {
+      await fs.access(path.join(ctx.root, marker));
+      return { detected: true };
+    } catch { /* try next marker */ }
+  }
+  return { detected: false };
+}
 
 export async function scanClaudeProject(ctx: { root: string }): Promise<AgentBundle> {
   const bundle: AgentBundle = {
@@ -20,7 +36,7 @@ export async function scanClaudeProject(ctx: { root: string }): Promise<AgentBun
       const stat = await fs.stat(filePath);
       if (stat.isFile()) {
         const content = await fs.readFile(filePath, 'utf-8');
-        bundle.instructions.push(createResource('instruction', file, filePath, ctx.root, content));
+        bundle.instructions.push({ name: file, content });
       }
     } catch {
       // File doesn't exist, skip
@@ -36,7 +52,7 @@ export async function scanClaudeProject(ctx: { root: string }): Promise<AgentBun
         const filePath = path.join(claudeDir, entry.name);
         const content = await fs.readFile(filePath, 'utf-8');
 
-        bundle.opaque.push(createResource('opaque', `.claude/${entry.name}`, filePath, ctx.root, content));
+        bundle.opaque.push({ name: `.claude/${entry.name}`, content });
 
         // Extract MCP servers from settings.json
         if (entry.name === 'settings.json') {
@@ -44,7 +60,7 @@ export async function scanClaudeProject(ctx: { root: string }): Promise<AgentBun
             const settings = JSON.parse(content);
             if (settings.mcpServers && typeof settings.mcpServers === 'object') {
               for (const [name, server] of Object.entries(settings.mcpServers) as [string, Record<string, unknown>][]) {
-                bundle.mcpServers.push(createResource('mcpServer', name, filePath, ctx.root, JSON.stringify(server)));
+                bundle.mcpServers.push({ name, content: JSON.stringify(server) });
               }
             }
           } catch { /* parse error, skip */ }
@@ -57,3 +73,9 @@ export async function scanClaudeProject(ctx: { root: string }): Promise<AgentBun
 
   return bundle;
 }
+
+export const claudeAdapter: AgentAdapter = {
+  id: 'claude-code',
+  detect: detectClaude,
+  scanProject: scanClaudeProject,
+};

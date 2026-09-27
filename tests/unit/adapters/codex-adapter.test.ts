@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { detectCodex, scanCodexProject } from '../../../src/adapters/codex/scanner.js';
 import { writeCodexFiles } from '../../../src/adapters/codex/writer.js';
+import { flattenBundle } from '../../../src/core/pipeline.js';
 import { ResourceBase } from '../../../src/core/model/types.js';
 
 let tmpDir: string;
@@ -42,7 +43,7 @@ describe('codex scanner', () => {
     );
 
     const detection = await detectCodex({ root: tmpDir });
-    expect(detection).toEqual({ detected: true, agent: 'codex' });
+    expect(detection).toEqual({ detected: true });
 
     const bundle = await scanCodexProject({ root: tmpDir });
     expect(bundle.mcpServers.map(s => s.name).sort()).toEqual(['fs', 'remote']);
@@ -63,7 +64,7 @@ describe('codex scanner', () => {
 describe('codex writer', () => {
   it('writes mcpServers into TOML section tables and drops explicit stdio type', () => {
     const files = writeCodexFiles([
-      { id: 'm', type: 'mcpServers', name: 'fs', content: JSON.stringify({ type: 'stdio', command: 'npx', args: ['-y', 'pkg'], env: { K: 'v' } }) },
+      { type: 'mcpServers', name: 'fs', content: JSON.stringify({ type: 'stdio', command: 'npx', args: ['-y', 'pkg'], env: { K: 'v' } }) },
     ] as ResourceBase[]);
     const config = files.find(f => f.path === '.codex/config.toml');
     expect(config).toBeTruthy();
@@ -72,7 +73,7 @@ describe('codex writer', () => {
 
   it('writes url-based servers with url and nested objects as section tables', () => {
     const files = writeCodexFiles([
-      { id: 'r', type: 'mcpServers', name: 'remote', content: JSON.stringify({ url: 'https://example.com/mcp', headers: { A: 'b' } }) },
+      { type: 'mcpServers', name: 'remote', content: JSON.stringify({ url: 'https://example.com/mcp', headers: { A: 'b' } }) },
     ] as ResourceBase[]);
     const content = files.find(f => f.path === '.codex/config.toml')!.content;
     expect(content).toBe('[mcp_servers.remote]\nurl = "https://example.com/mcp"\n\n[mcp_servers.remote.headers]\nA = "b"\n');
@@ -80,8 +81,8 @@ describe('codex writer', () => {
 
   it('writes instructions to AGENTS.md (native for codex) and model into the TOML doc', () => {
     const files = writeCodexFiles([
-      { id: 'i', type: 'instructions', name: 'GEMINI.md', content: '# Rules' },
-      { id: 'o', type: 'opaque', name: '.claude/settings.json', content: JSON.stringify({ model: 'test-model' }) },
+      { type: 'instructions', name: 'GEMINI.md', content: '# Rules' },
+      { type: 'opaque', name: '.claude/settings.json', content: JSON.stringify({ model: 'test-model' }) },
     ] as ResourceBase[]);
     expect(files.find(f => f.path === 'AGENTS.md')!.content).toBe('# Rules');
     expect(files.find(f => f.path === '.codex/config.toml')!.content).toBe('model = "test-model"\n');
@@ -94,7 +95,7 @@ describe('codex writer', () => {
       'model = "gpt-5"\n\n[mcp_servers.fs]\ncommand = "npx"\nargs = ["-y", "pkg"]\n',
     );
     const first = await scanCodexProject({ root: tmpDir });
-    const files = writeCodexFiles(first.instructions.concat(first.mcpServers, first.opaque) as ResourceBase[]);
+    const files = writeCodexFiles(flattenBundle(first));
     await fs.writeFile(path.join(tmpDir, '.codex', 'config.toml'), files.find(f => f.path === '.codex/config.toml')!.content);
     const second = await scanCodexProject({ root: tmpDir });
     expect(second.mcpServers.map(s => [s.name, JSON.parse(s.content!)])).toEqual(first.mcpServers.map(s => [s.name, JSON.parse(s.content!)]));

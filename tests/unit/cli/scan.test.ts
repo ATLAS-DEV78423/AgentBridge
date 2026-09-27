@@ -33,7 +33,7 @@ describe('executeScan', () => {
 
     const out = logs.join('\n');
     expect(out).toContain('Claude Code');
-    expect(out).toContain('Cursor');
+    expect(out).toContain('cursor'); // factory adapters report the id
     expect(out).toContain('Kilo Code');
   });
 

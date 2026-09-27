@@ -3,19 +3,19 @@ import { writeOpenCodeFiles } from '../../../src/adapters/opencode/writer.js';
 import { ResourceBase } from '../../../src/core/model/types.js';
 
 const inst = (name: string, content: string): ResourceBase => ({
-  id: `instructions-${name}`, type: 'instructions', name, content,
+  type: 'instructions', name, content,
 });
 const opaque = (name: string, content: string): ResourceBase => ({
-  id: `opaque-${name}`, type: 'opaque', name, content,
+  type: 'opaque', name, content,
 });
 const mcp = (name: string, server: Record<string, unknown>): ResourceBase => ({
-  id: `mcp-${name}`, type: 'mcpServers', name, content: JSON.stringify(server),
+  type: 'mcpServers', name, content: JSON.stringify(server),
 });
 
 describe('writeOpenCodeFiles (documented dialect)', () => {
   it('passes instructions through unchanged', () => {
     expect(writeOpenCodeFiles([inst('AGENTS.md', '# Rules')]))
-      .toEqual([{ path: 'AGENTS.md', content: '# Rules', action: 'create' }]);
+      .toEqual([{ path: 'AGENTS.md', content: '# Rules' }]);
   });
 
   it('normalizes GEMINI.md instructions to AGENTS.md', () => {

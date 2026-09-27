@@ -5,16 +5,21 @@ import { parseJsonc } from './jsonc.js';
 import { createTransaction, applyTransaction, Transaction, TransactionOperation } from './transaction/transaction.js';
 
 /**
- * The safe auto-fixes:
+ * Applies exactly the auto-fixes doctor marks as safe — the `fix` payload on
+ * each problem, never a re-parse of its message:
  *
- * 1. A strict-JSON config that fails only because of comments/trailing
- *    commas is rewritten comment-free in place — preserves every byte of
- *    data and keeps the agent reading its own documented path (renaming to
- *    .jsonc would NOT be safe: e.g. Claude Code only reads settings.json).
+ * 1. `rewrite-comment-free` — a strict-JSON config that fails only because of
+ *    comments/trailing commas is rewritten comment-free in place, preserving
+ *    every byte of data and keeping the agent reading its own documented path
+ *    (renaming to .jsonc would NOT be safe: e.g. Claude Code only reads
+ *    settings.json).
  *
- * 2. Divergent project-general instruction files (AGENTS.md / GEMINI.md /
- *    MUSE_CODE.md) are synced from AGENTS.md, the convention every agent
- *    here reads. Each written file is backed up by the transaction.
+ * 2. `rewrite-alias-key` — a legacy MCP key (mcpServers in an opencode/kilo
+ *    config that expects mcp) is renamed to the key the agent actually reads.
+ *
+ * 3. `sync-from-AGENTS.md` — divergent project-general instruction files
+ *    (AGENTS.md / GEMINI.md / MUSE_CODE.md) are synced from AGENTS.md, the
+ *    convention every agent here reads.
  *
  * Everything else doctor reports (schema problems like a missing transport
  * type, wrong MCP key shapes, unparseable files) changes behavior, so a
@@ -39,70 +44,40 @@ export async function fixProject(
 
   for (const report of reports) {
     for (const problem of report.problems) {
-      // 1. Commented strict-JSON config → rewrite comment-free in place.
-      if (problem.message.includes('comments or trailing commas')) {
-        const raw = await readFile(problem.file);
-        if (raw === null) continue;
+      const fix = problem.fix;
+      if (!fix) continue; // needs a human decision
 
-        let doc: unknown;
-        try {
-          doc = parseJsonc(raw);
-        } catch { continue; } // not actually comment-fixable — leave it
-
-        planned.push({
-          op: { type: 'create', targetPath: problem.file, content: JSON.stringify(doc, null, 2) + '\n' },
-          kind: 'rewrite-comment-free',
-          before: raw,
-        });
+      if (fix.kind === 'sync-from-AGENTS.md') {
+        const source = await readFile('AGENTS.md');
+        const before = source === null ? null : await readFile(problem.file);
+        // No AGENTS.md to sync from, or the diverged file is already gone.
+        if (source === null || before === null) continue;
+        if (planned.some(p => p.op.targetPath === problem.file)) continue;
+        planned.push({ op: { targetPath: problem.file, content: source }, kind: fix.kind, before });
         continue;
       }
 
-      // 2. Legacy alias key found (e.g. mcpServers in an opencode/kilo config expecting mcp)
-      const aliasMatch = problem.message.match(/found "([^"]+)" but \w+ expects "([^"]+)"/);
-      if (aliasMatch) {
-        const [, alias, expected] = aliasMatch;
-        const raw = await readFile(problem.file);
-        if (raw === null) continue;
+      const before = await readFile(problem.file);
+      if (before === null) continue;
 
-        let doc: unknown;
-        try {
-          doc = parseJsonc(raw);
-        } catch { continue; }
+      let doc: Record<string, unknown>;
+      try {
+        doc = parseJsonc(before) as Record<string, unknown>;
+      } catch { continue; } // not actually fixable — leave it for a human
 
-        if (doc && typeof doc === 'object' && !Array.isArray(doc)) {
-          const obj = doc as Record<string, unknown>;
-          if (alias in obj && !(expected in obj)) {
-            obj[expected] = obj[alias];
-            delete obj[alias];
-            planned.push({
-              op: { type: 'create', targetPath: problem.file, content: JSON.stringify(obj, null, 2) + '\n' },
-              kind: 'rewrite-alias-key',
-              before: raw,
-            });
-            continue;
-          }
-        }
+      if (fix.kind === 'rewrite-alias-key') {
+        // Only rename when the agent's real key is absent: if both are
+        // present the file is ambiguous and a human picks the winner.
+        if (!(fix.from in doc) || fix.to in doc) continue;
+        doc[fix.to] = doc[fix.from];
+        delete doc[fix.from];
       }
 
-
-      // 2. Divergent project instructions → sync from AGENTS.md.
-      if (report.agent === 'project' && problem.message.includes('instruction files diverge')) {
-        const source = await readFile('AGENTS.md');
-        if (source === null) continue; // no AGENTS.md to sync from — human decides
-
-        const diverged = problem.message.match(/AGENTS\.md and ([\w./-]+) differ/);
-        if (!diverged) continue;
-        const target = diverged[1];
-        if (planned.some(p => p.op.targetPath === target)) continue;
-
-        const before = await readFile(target);
-        if (before === null) continue;
-        planned.push({
-          op: { type: 'create', targetPath: target, content: source },
-          kind: 'sync-from-AGENTS.md',
-          before,
-        });
-      }
+      planned.push({
+        op: { targetPath: problem.file, content: JSON.stringify(doc, null, 2) + '\n' },
+        kind: fix.kind,
+        before,
+      });
     }
   }
 

@@ -9,7 +9,7 @@ const AGENTS = [
 ];
 
 const res = (type: string, name: string, content = 'x'): ResourceBase =>
-  ({ id: 't', type, name, content } as ResourceBase);
+  ({ type, name, content } as ResourceBase);
 
 describe('writerSupports (plan derives status from the real writer)', () => {
   it('every writer supports instructions, normalizing agent-specific filenames', () => {

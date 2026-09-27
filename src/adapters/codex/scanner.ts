@@ -1,19 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { DetectionResult, createResource } from '../../core/scanner/scanner.js';
+import { AgentAdapter, DetectionResult } from '../../core/scanner/scanner.js';
 import { AgentBundle } from '../../core/model/types.js';
 import { parseToml } from '../../core/toml.js';
-
-/** Strip agent-dialect fields so servers flow in the canonical command/args/env + url shape. */
-function canonicalServer(server: Record<string, unknown>): Record<string, unknown> {
-  const { type: _type, ...rest } = server;
-  return rest;
-}
+import { canonicalServer } from '../dialect.js';
 
 export async function detectCodex(ctx: { root: string }): Promise<DetectionResult> {
   try {
     await fs.access(path.join(ctx.root, '.codex', 'config.toml'));
-    return { detected: true, agent: 'codex' };
+    return { detected: true };
   } catch {
     return { detected: false };
   }
@@ -26,7 +21,7 @@ export async function scanCodexProject(ctx: { root: string }): Promise<AgentBund
   const agentsPath = path.join(ctx.root, 'AGENTS.md');
   try {
     const content = await fs.readFile(agentsPath, 'utf-8');
-    bundle.instructions.push(createResource('instructions', 'AGENTS.md', agentsPath, ctx.root, content));
+    bundle.instructions.push({ name: 'AGENTS.md', content });
   } catch { /* absent */ }
 
   const configPath = path.join(ctx.root, '.codex', 'config.toml');
@@ -38,16 +33,22 @@ export async function scanCodexProject(ctx: { root: string }): Promise<AgentBund
     return bundle; // absent or unsupported TOML — nothing extractable
   }
 
-  bundle.opaque.push(createResource('opaque', '.codex/config.toml', configPath, ctx.root, JSON.stringify(doc)));
+  bundle.opaque.push({ name: '.codex/config.toml', content: JSON.stringify(doc) });
 
   const servers = doc.mcp_servers;
   if (servers && typeof servers === 'object') {
     for (const [name, server] of Object.entries(servers as Record<string, unknown>)) {
       if (server && typeof server === 'object') {
-        bundle.mcpServers.push(createResource('mcpServers', name, configPath, ctx.root, JSON.stringify(canonicalServer(server as Record<string, unknown>))));
+        bundle.mcpServers.push({ name, content: JSON.stringify(canonicalServer(server as Record<string, unknown>)) });
       }
     }
   }
 
   return bundle;
 }
+
+export const codexAdapter: AgentAdapter = {
+  id: 'codex',
+  detect: detectCodex,
+  scanProject: scanCodexProject,
+};

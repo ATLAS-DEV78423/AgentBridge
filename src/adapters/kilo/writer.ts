@@ -1,33 +1,10 @@
 import { ResourceBase } from '../../core/model/types.js';
 import { TargetFile } from '../../core/writers.js';
 import { instructionsTarget } from '../simple-agents.js';
+import { fromCanonicalServer } from '../dialect.js';
 
-/**
- * Translate Claude/OpenCode stdio-style MCP server config to Kilo's local format
- * (per kilo.ai docs): command becomes an array of program+args, env → environment,
- * implicit/explicit stdio → type: "local".
- */
-function translateToLocal(server: Record<string, unknown>): Record<string, unknown> {
-  const result: Record<string, unknown> = { type: 'local' };
-  const command = [
-    ...(typeof server.command === 'string' ? [server.command] : []),
-    ...(Array.isArray(server.args) ? server.args : []),
-  ];
-  result.command = command;
-  if (server.env && typeof server.env === 'object') result.environment = server.env;
-  return result;
-}
-
-/** Remote (url-based) servers map straight across with type: "remote". */
-function translateToRemote(server: Record<string, unknown>): Record<string, unknown> {
-  const result: Record<string, unknown> = { type: 'remote', url: server.url };
-  if (server.headers && typeof server.headers === 'object') result.headers = server.headers;
-  return result;
-}
-
-function translateMcpServer(server: Record<string, unknown>): Record<string, unknown> {
-  return typeof server.url === 'string' ? translateToRemote(server) : translateToLocal(server);
-}
+/** Kilo writes the same local/remote dialect as OpenCode, under its own key. */
+const translateMcpServer = fromCanonicalServer;
 
 /** Pick the subset of a source agent's opaque config that Kilo understands. */
 function buildKiloConfig(opaqueContent: string): Record<string, unknown> {
@@ -50,7 +27,7 @@ export function writeKiloFiles(resources: ResourceBase[]): TargetFile[] {
 
   for (const r of resources) {
     if (r.type === 'instructions' && r.content) {
-      files.push({ path: instructionsTarget(r.name), content: r.content, action: 'create' });
+      files.push({ path: instructionsTarget(r.name), content: r.content });
     } else if (r.type === 'opaque' && r.content) {
       Object.assign(config, buildKiloConfig(r.content));
     } else if (r.type === 'mcpServers' && r.content) {
@@ -63,7 +40,7 @@ export function writeKiloFiles(resources: ResourceBase[]): TargetFile[] {
   if (Object.keys(mcp).length > 0) config.mcp = mcp;
 
   if (Object.keys(config).length > 0) {
-    files.push({ path: '.kilo/kilo.jsonc', content: JSON.stringify(config, null, 2), action: 'create' });
+    files.push({ path: '.kilo/kilo.jsonc', content: JSON.stringify(config, null, 2) });
   }
 
   return files;

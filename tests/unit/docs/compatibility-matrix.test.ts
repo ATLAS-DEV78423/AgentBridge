@@ -9,30 +9,33 @@ const AGENTS = [
   'claude-code', 'opencode', 'kilo', 'cursor', 'gemini',
   'codex', 'copilot', 'crush', 'grok', 'omp', 'muse-code', 'pi', 'cline', 'windsurf',
 ] as const;
-
 // A representative opaque config per source agent — what "model settings" means there.
 // Agents whose project config carries no model produce no model migration anywhere.
 const HAS_MODEL_SOURCES = new Set(['claude-code', 'opencode', 'kilo', 'codex']);
+
+// Each source's config path, as a table rather than a ternary chain.
+const CONFIG_PATH: Record<string, string> = {
+  'claude-code': '.claude/settings.json',
+  'opencode': 'opencode.jsonc',
+  'kilo': '.kilo/kilo.jsonc',
+  'codex': '.codex/config.toml',
+  'gemini': '.gemini/settings.json',
+  'cursor': '.cursor/mcp.json',
+  'crush': '.crush.json',
+  'omp': '.pi/mcp.json',
+  'copilot': '.copilot/mcp-config.json',
+  'grok': '.mcp.json',
+  'windsurf': '.codeium/windsurf/mcp_config.json',
+  'muse-code': 'MUSE_CODE.md',
+};
+
 const opaqueFor = (source: string): ResourceBase => ({
-  id: 'o',
   type: 'opaque',
-  name: source === 'claude-code' ? '.claude/settings.json'
-    : source === 'opencode' ? 'opencode.jsonc'
-    : source === 'kilo' ? '.kilo/kilo.jsonc'
-    : source === 'codex' ? '.codex/config.toml'
-    : source === 'gemini' ? '.gemini/settings.json'
-    : source === 'cursor' ? '.cursor/mcp.json'
-    : source === 'crush' ? '.crush.json'
-    : source === 'omp' ? '.pi/mcp.json'
-    : source === 'copilot' ? '.copilot/mcp-config.json'
-    : source === 'grok' ? '.mcp.json'
-    : source === 'windsurf' ? '.codeium/windsurf/mcp_config.json'
-    : 'MUSE_CODE.md',
+  name: CONFIG_PATH[source],
   content: JSON.stringify(HAS_MODEL_SOURCES.has(source) ? { model: 'test-model' } : { mcpServers: {} }),
 });
-
-const inst = (name: string): ResourceBase => ({ id: 'i', type: 'instructions', name, content: '# R' } as ResourceBase);
-const mcp = (): ResourceBase => ({ id: 'm', type: 'mcpServers', name: 'fs', content: JSON.stringify({ command: 'npx', args: ['-y', 'm'] }) } as ResourceBase);
+const inst = (name: string): ResourceBase => ({ type: 'instructions', name, content: '# R' } as ResourceBase);
+const mcp = (): ResourceBase => ({ type: 'mcpServers', name: 'fs', content: JSON.stringify({ command: 'npx', args: ['-y', 'm'] }) } as ResourceBase);
 
 function sourceInstructionName(source: string): string {
   return source === 'gemini' ? 'GEMINI.md' : source === 'muse-code' ? 'MUSE_CODE.md' : 'AGENTS.md';

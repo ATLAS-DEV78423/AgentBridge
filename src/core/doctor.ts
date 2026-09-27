@@ -9,7 +9,18 @@ export type DoctorProblem = {
   file: string; // project-relative
   line?: number;
   message: string;
+  /**
+   * Present when the problem has a safe, behavior-preserving automatic fix —
+   * doctor knows the facts, so fix reads them instead of re-parsing `message`.
+   */
+  fix?: AutoFix;
 };
+
+/** The only changes `agent-migrate fix` applies without a human decision. */
+export type AutoFix =
+  | { kind: 'rewrite-comment-free' }
+  | { kind: 'rewrite-alias-key'; from: string; to: string }
+  | { kind: 'sync-from-AGENTS.md' };
 
 export type DoctorAgentReport = {
   agent: string;
@@ -175,6 +186,7 @@ export async function doctor(projectPath: string): Promise<DoctorAgentReport[]> 
               severity: 'error',
               line: error.line,
               message: `file is not valid JSON (comments or trailing commas) — strict parsers skip it and its MCP servers would never migrate; rename to .jsonc or remove them`,
+              fix: { kind: 'rewrite-comment-free' },
             }));
           } catch {
             problems.push(problem(error));
@@ -193,10 +205,14 @@ export async function doctor(projectPath: string): Promise<DoctorAgentReport[]> 
                 problems.push(problem({ severity: 'error', message }));
               }
             }
-          } else if (spec.mcpKeyAliases && Object.keys(spec.mcpKeyAliases).some(alias => alias in doc)) {
+          } else if (spec.mcpKeyAliases && !(spec.mcpKey in doc)) {
             for (const [alias, expected] of Object.entries(spec.mcpKeyAliases)) {
-              if (alias in doc && !(spec.mcpKey in doc)) {
-                problems.push(problem({ severity: 'warning', message: `found "${alias}" but ${agentId} expects "${expected}" — this config's servers will not load` }));
+              if (alias in doc) {
+                problems.push(problem({
+                  severity: 'warning',
+                  message: `found "${alias}" but ${agentId} expects "${expected}" — this config's servers will not load`,
+                  fix: { kind: 'rewrite-alias-key', from: alias, to: expected },
+                }));
               }
             }
           }
@@ -238,8 +254,9 @@ export async function doctor(projectPath: string): Promise<DoctorAgentReport[]> 
     if (contents[i].content !== contents[0].content) {
       projectProblems.push({
         severity: 'warning',
-        file: '',
+        file: contents[i].file,
         message: `instruction files diverge: ${contents[0].file} and ${contents[i].file} differ — different agents will act on different rules; keep them in sync or consolidate into AGENTS.md`,
+        fix: { kind: 'sync-from-AGENTS.md' },
       });
     }
   }

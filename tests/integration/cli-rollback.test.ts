@@ -2,21 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const run = promisify(execFile);
-const repo = path.resolve('.');
-
-async function runCli(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
-  try {
-    const { stdout, stderr } = await run('npx', ['tsx', 'src/cli/main.ts', ...args], { cwd: repo });
-    return { code: 0, stdout, stderr };
-  } catch (err: unknown) {
-    const e = err as { code: number; stdout: string; stderr: string };
-    return { code: e.code, stdout: e.stdout, stderr: e.stderr };
-  }
-}
+import { runCli } from './run-cli';
 
 /** The migration id migrate prints as the last segment of the backup dir path. */
 function txIdOf(stdout: string): string {

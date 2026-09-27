@@ -3,19 +3,19 @@ import { writeCursorFiles } from '../../../src/adapters/simple-agents.js';
 import { ResourceBase } from '../../../src/core/model/types.js';
 
 const inst = (name: string, content: string): ResourceBase => ({
-  id: `instructions-${name}`, type: 'instructions', name, content,
+  type: 'instructions', name, content,
 });
 const mcp = (name: string, config: object): ResourceBase => ({
-  id: `mcpServers-${name}`, type: 'mcpServers', name, content: JSON.stringify(config),
+  type: 'mcpServers', name, content: JSON.stringify(config),
 });
 const opaque = (name: string, content: string): ResourceBase => ({
-  id: `opaque-${name}`, type: 'opaque', name, content,
+  type: 'opaque', name, content,
 });
 
 describe('writeCursorFiles', () => {
   it('passes instructions through unchanged', () => {
     expect(writeCursorFiles([inst('AGENTS.md', '# Rules')]))
-      .toEqual([{ path: 'AGENTS.md', content: '# Rules', action: 'create' }]);
+      .toEqual([{ path: 'AGENTS.md', content: '# Rules' }]);
   });
 
   it('normalizes GEMINI.md instructions to AGENTS.md', () => {
@@ -31,7 +31,6 @@ describe('writeCursorFiles', () => {
       content: JSON.stringify({
         mcpServers: { fs: { type: 'stdio', command: 'npx', args: ['-y', 'mcp-fs'], env: { FOO: '1' } } },
       }, null, 2),
-      action: 'create',
     }]);
   });
 

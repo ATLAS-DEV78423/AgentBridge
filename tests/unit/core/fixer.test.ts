@@ -61,13 +61,10 @@ describe('fixProject (safe auto-fixes only)', () => {
     expect(JSON.parse(after)).toEqual({ model: 'm' }); // data intact, comments gone
     expect(after).not.toContain('//');
 
-    // rollback wire: manifest is keyed by target path, the backup file by a flattened name
+    // rollback wire: the manifest holds every original content
     const backupDir = path.join(tmpDir, '.agentbridge', 'backups', txId!);
     const manifest = JSON.parse(await fs.readFile(path.join(backupDir, 'manifest.json'), 'utf-8'));
-    expect(manifest.originals['.claude/settings.json']).toBeDefined();
-    const backupName = '.claude/settings.json'.replace(/[/\\]/g, '__');
-    const backup = await fs.readFile(path.join(backupDir, backupName), 'utf-8');
-    expect(backup).toBe(commented);
+    expect(manifest.originals['.claude/settings.json']).toBe(commented);
   });
 
   it('leaves non-json parse errors and schema problems for a human', async () => {
@@ -135,11 +132,9 @@ describe('fixProject (safe auto-fixes only)', () => {
     expect(parsed.mcpServers).toBeUndefined();
     expect(parsed.mcp.fs).toEqual({ command: 'npx', args: ['-y', 'fs'] });
 
-    // verify backup manifest
+    // verify the manifest carries the pre-fix content for rollback
     const backupDir = path.join(tmpDir, '.agentbridge', 'backups', txId!);
     const manifest = JSON.parse(await fs.readFile(path.join(backupDir, 'manifest.json'), 'utf-8'));
-    expect(manifest.originals['opencode.json']).toBeDefined();
-    const backup = await fs.readFile(path.join(backupDir, 'opencode.json'), 'utf-8');
-    expect(backup).toBe(legacyConfig);
+    expect(manifest.originals['opencode.json']).toBe(legacyConfig);
   });
 });

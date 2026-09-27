@@ -29,13 +29,11 @@ if (args.includes('--help') || args.includes('-h') || args.length === 0) {
 const command = args[0];
 
 /**
- * Positional arg extraction that skips well-known flags so
- * `migrate s t --dry-run` doesn't parse `--dry-run` as the path.
+ * Positional args with well-known flags skipped, so `migrate s t --dry-run`
+ * doesn't parse `--dry-run` as the path.
  */
-function positional(flags: string[] = ['--dry-run']): (i: number) => string | undefined {
-  const positionals = args.slice(1).filter(a => !flags.includes(a));
-  return (i: number) => positionals[i];
-}
+const positionals = args.slice(1).filter(a => a !== '--dry-run');
+const positional = (i: number): string | undefined => positionals[i];
 
 printBanner();
 
@@ -51,35 +49,35 @@ function checkPair(source?: string, target?: string): void {
 
 switch (command) {
   case 'scan': {
-    executeScan(positional()(0) || '.').catch(err => { console.error('Error:', err.message); process.exit(1); });
+    executeScan(positional(0) || '.').catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'plan': {
-    const p = positional();
-    const source = p(0), target = p(1), path = p(2) || '.';
+    const p = positional;
+    const source = positional(0), target = positional(1), path = positional(2) || '.';
     if (!source || !target) fail('Usage: agent-migrate plan <source> <target> [path]', 2);
     checkPair(source, target);
     executePlan(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'diff': {
-    const p = positional();
-    const source = p(0), target = p(1), path = p(2) || '.';
+    const p = positional;
+    const source = positional(0), target = positional(1), path = positional(2) || '.';
     if (!source || !target) fail('Usage: agent-migrate diff <source> <target> [path]', 2);
     checkPair(source, target);
     executeDiff(source, target, path).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'rollback': {
-    const p = positional();
-    const path = p(0) || '.', migrationId = p(1);
+    const p = positional;
+    const path = positional(0) || '.', migrationId = positional(1);
     if (!migrationId) fail('Usage: agent-migrate rollback <path> <migration-id>', 2);
     executeRollback(path, migrationId).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'migrate': {
-    const p = positional();
-    const source = p(0), target = p(1), path = p(2) || '.';
+    const p = positional;
+    const source = positional(0), target = positional(1), path = positional(2) || '.';
     const dryRun = args.includes('--dry-run');
     if (!source || !target) fail('Usage: agent-migrate migrate <source> <target> [path] [--dry-run]', 2);
     checkPair(source, target);
@@ -87,16 +85,16 @@ switch (command) {
     break;
   }
   case 'doctor': {
-    executeDoctor(positional()(0) || '.').catch(err => { console.error('Error:', err.message); process.exit(1); });
+    executeDoctor(positional(0) || '.').catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'fix': {
-    executeFix(positional()(0) || '.', args.includes('--dry-run')).catch(err => { console.error('Error:', err.message); process.exit(1); });
+    executeFix(positional(0) || '.', args.includes('--dry-run')).catch(err => { console.error('Error:', err.message); process.exit(1); });
     break;
   }
   case 'migrate-all': {
-    const p = positional();
-    const source = p(0), path = p(1) || '.';
+    const p = positional;
+    const source = positional(0), path = positional(1) || '.';
     const dryRun = args.includes('--dry-run');
     if (!source) fail('Usage: agent-migrate migrate-all <source> [path] [--dry-run]', 2);
     executeMigrateAll(source, path, dryRun).catch(err => { console.error('Error:', err.message); process.exit(1); });

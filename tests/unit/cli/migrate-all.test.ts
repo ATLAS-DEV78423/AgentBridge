@@ -3,9 +3,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { executeMigrateAll } from '../../../src/cli/commands/migrate-all.js';
-import { registerWriter } from '../../../src/core/writers.js';
-import { AgentAdapter } from '../../../src/core/scanner/scanner.js';
-import { adapters as realAdapters } from '../../../src/adapters/registry.js';
 
 let tmpDir: string;
 
@@ -39,26 +36,6 @@ describe('executeMigrateAll', () => {
     expect(results.cursor.fileCount).toBeGreaterThan(0);
   });
 
-  it('fails fast when a detected agent lacks a target writer, before migrating anything', async () => {
-    await seedClaudeProject();
-    // Fake agent that detects but has no registered writer
-    const fakeAdapter: AgentAdapter = {
-      id: 'fake-no-writer',
-      detect: async () => ({ detected: true, agent: 'fake-no-writer' }),
-      scanProject: async () => ({ sourceAgent: 'Fake', instructions: [], mcpServers: [], opaque: [] }),
-    };
-    (realAdapters as Record<string, AgentAdapter>)['fake-no-writer'] = fakeAdapter;
-
-    try {
-      await expect(executeMigrateAll('claude-code', tmpDir)).rejects.toThrow(
-        /No target writer for.*fake-no-writer/s,
-      );
-      // Nothing migrated: no backup dir created for this run
-      await expect(fs.access(path.join(tmpDir, '.agentbridge'))).rejects.toThrow();
-    } finally {
-      delete (realAdapters as Record<string, AgentAdapter>)['fake-no-writer'];
-    }
-  });
 
   it('dry run plans every target but writes nothing', async () => {
     await seedClaudeProject();

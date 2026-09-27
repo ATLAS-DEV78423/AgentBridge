@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { detectOpenCode } from '../../src/adapters/opencode/detector.js';
+import { detectOpenCode } from '../../src/adapters/opencode/scanner.js';
 import { scanOpenCodeProject } from '../../src/adapters/opencode/scanner.js';
 
 const FIXTURE = path.resolve('tests/fixtures/opencode-basic');
@@ -11,8 +11,7 @@ describe('OpenCode scanner', () => {
   it('detects OpenCode project', async () => {
     const result = await detectOpenCode({ root: FIXTURE });
     expect(result.detected).toBe(true);
-    expect(result.agent).toBe('opencode');
-  });
+      });
 
   it('does not detect non-OpenCode project', async () => {
     const result = await detectOpenCode({ root: '/tmp' });

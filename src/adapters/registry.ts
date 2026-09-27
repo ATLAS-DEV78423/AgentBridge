@@ -1,20 +1,19 @@
 import { AgentAdapter } from '../core/scanner/scanner.js';
-import { registerWriter } from '../core/writers.js';
-import { claudeAdapter } from './claude-code/index.js';
+import { registerWriter, WriteFn } from '../core/writers.js';
+import { claudeAdapter } from './claude-code/scanner.js';
 import { writeClaudeFiles } from './claude-code/writer.js';
-import { openCodeAdapter } from './opencode/index.js';
+import { openCodeAdapter } from './opencode/scanner.js';
 import { writeOpenCodeFiles } from './opencode/writer.js';
-import { kiloAdapter } from './kilo/index.js';
+import { kiloAdapter } from './kilo/scanner.js';
 import { writeKiloFiles } from './kilo/writer.js';
-import { cursorAdapter } from './cursor/index.js';
-import { geminiAdapter } from './gemini/index.js';
-import { codexAdapter } from './codex/index.js';
+import { codexAdapter } from './codex/scanner.js';
 import { writeCodexFiles } from './codex/writer.js';
 import {
+  cursorAdapter, writeCursorFiles,
+  geminiAdapter, writeGeminiFiles,
   copilotAdapter, writeCopilotFiles,
   crushAdapter, writeCrushFiles,
   grokAdapter, writeGrokFiles,
-  writeGeminiFiles, writeCursorFiles,
   ompAdapter, writeOmpFiles,
   museCodeAdapter, writeMuseCodeFiles,
   piAdapter, writePiFiles,
@@ -28,7 +27,7 @@ import {
  * class is structurally impossible. registerWriter throws on duplicates,
  * guarding against double registration.
  */
-const AGENT_REGISTRATIONS: [string, AgentAdapter, (resources: Parameters<Parameters<typeof registerWriter>[1]>[0]) => ReturnType<Parameters<typeof registerWriter>[1]>][] = [
+const AGENT_REGISTRATIONS: [string, AgentAdapter, WriteFn][] = [
   ['claude-code', claudeAdapter, writeClaudeFiles],
   ['opencode', openCodeAdapter, writeOpenCodeFiles],
   ['kilo', kiloAdapter, writeKiloFiles],
